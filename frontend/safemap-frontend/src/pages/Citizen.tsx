@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import citizenService from "../services/citizenService";
 
 interface ReportData {
   type: string;
@@ -46,14 +47,18 @@ const Citizen = () => {
     const payload = {
       type: form.type,
       description: form.description,
-      latitude: form.location.lat,
-      longitude: form.location.lng,
+      latt: form.location.lat,
+      lng: form.location.lng,
     };
 
     console.log("Sending report:", payload);
 
-    // TODO: connect this with your backend
-    // await fetch("/api/report", { method: "POST", body: JSON.stringify(payload) })
+    try {
+      await citizenService.createReport(payload);
+    } catch (error: any) {
+      alert("Failed to submit report: " + error.message);
+      return;
+    }
 
     alert("Report submitted!");
     setShowForm(false);
@@ -67,7 +72,7 @@ const Citizen = () => {
 
       {/* Main Buttons */}
       <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginTop: "20px" }}>
-        
+
         <button
           style={bigButton}
           onClick={() => setShowForm(true)}
@@ -105,8 +110,8 @@ const Citizen = () => {
             <option value="flood">Flood</option>
             <option value="landslide">Landslide</option>
             <option value="blocked_road">Blocked Road</option>
-            <option value="fire">Fire</option>
-            <option value="injury">Injury / SOS</option>
+            <option value="wildfire">Fire</option>
+            <option value="other">Injury / SOS</option>
           </select>
 
           <label>Description (optional):</label>
