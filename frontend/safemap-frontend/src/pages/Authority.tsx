@@ -4,8 +4,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { socket } from "../services/socket"; 
+import { socket } from "../services/socket";
 import { getReportsApi, patchReportApi, getHazardsApi } from "../services/api";
+import { fetchCurrentUser } from "../services/loginService";
 
 type ReportStatus = "pending" | "provisional_closed" | "closed" | "rejected";
 
@@ -18,7 +19,6 @@ interface Report {
   status: ReportStatus;
   createdAt: string;
   reporterId?: string;
-  // optional severity score you can compute server-side
   severity?: number;
 }
 
@@ -36,19 +36,23 @@ function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | nul
   }, [map, mapRef]);
   return null;
 }
-
 export default function Authority(): JSX.Element {
   const [reports, setReports] = useState<Report[]>([]);
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
-  // load reports from backend
+  // store Leaflet map instance here
+  const mapRef = useRef<LeafletMap | null>(null);
+
+  const pendingCount = reports.filter((r) => r.status === "pending").length;
+  const provCount = reports.filter((r) => r.status === "provisional_closed").length;
+
+
   const loadReports = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getReportsApi();
-      console.log("Loaded reports!");
       setReports(data.data || []);
     } catch (err) {
       console.error("Failed to fetch reports:", err);
@@ -69,20 +73,20 @@ export default function Authority(): JSX.Element {
   useEffect(() => {
     loadReports();
     loadHazards();
-
-    // Poll fallback
     const id = setInterval(loadReports, 10000);
     return () => clearInterval(id);
   }, [loadReports, loadHazards]);
 
-  // socket updates (if your backend emits events)
   useEffect(() => {
-    socket.on("reportCreated", (r: Report) => {
-      setReports((prev) => [r, ...prev]);
-    });
-    socket.on("reportUpdated", (r: Report) => {
-      setReports((prev) => prev.map(p => p.id === r.id ? r : p));
-    });
+  fetchCurrentUser().then((user) => {
+    console.log("Current user:", user);
+  });
+}, []);
+
+
+  useEffect(() => {
+    socket.on("reportCreated", (r: Report) => setReports((prev) => [r, ...prev]));
+    socket.on("reportUpdated", (r: Report) => setReports((prev) => prev.map((p) => (p.id === r.id ? r : p))));
     socket.on("hazardsUpdated", () => loadHazards());
 
     return () => {
@@ -92,39 +96,46 @@ export default function Authority(): JSX.Element {
     };
   }, [loadHazards]);
 
-  // report actions
+
   async function updateReportStatus(reportId: string, status: ReportStatus) {
     try {
       const updated = await patchReportApi(reportId, { status });
-      setReports((prev) => prev.map(r => r.id === reportId ? updated : r));
-      if (status === "closed") {
-        // optionally create or update a hazard on confirm
-        // POST /api/hazards with coordinates — implementation depends on backend
-      }
+      setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
     } catch (err) {
       console.error("Failed to update report:", err);
       alert("Failed to update report (see console).");
     }
   }
 
-  // quick helpers
-  const pendingCount = reports.filter(r => r.status === "pending").length;
-  // const pendingCount = 0;
-  const provCount = reports.filter(r => r.status === "provisional_closed").length;
-  // const provCount = 0;
+
+  function focusOnReport(r: Report) {
+    setSelectedReport(r);
+
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.flyTo([r.lat, r.lng], 15, { duration: 0.9 });
+  }
+
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
-      {/* Left: controls & list */}
+      {/* LEFT PANEL */}
       <div style={{ width: 420, borderRight: "1px solid #eee", padding: 16, overflowY: "auto" }}>
         <h2>Authority Dashboard</h2>
+
         <p style={{ marginTop: 4, marginBottom: 12 }}>
-          Incoming reports: <strong>{reports.length}</strong> — pending: <strong>{pendingCount}</strong>, provisional: <strong>{provCount}</strong>
+          Incoming reports: <strong>{reports.length}</strong> — pending: <strong>{pendingCount}</strong>, provisional:{" "}
+          <strong>{provCount}</strong>
         </p>
 
         <div style={{ marginBottom: 12 }}>
-          <button onClick={loadReports} style={btn}>Refresh</button>
-          <button onClick={loadHazards} style={{ ...btn, marginLeft: 8 }}>Reload hazards</button>
+          <button onClick={loadReports} style={btn}>
+            Refresh
+          </button>
+          <button onClick={loadHazards} style={{ ...btn, marginLeft: 8 }}>
+            Reload hazards
+          </button>
         </div>
 
         <section>
@@ -151,10 +162,18 @@ export default function Authority(): JSX.Element {
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <button style={smallBtn} onClick={() => { setSelectedReport(r); }}>View on map</button>
-                      <button style={actionBtn} onClick={() => updateReportStatus(r.id, "provisional_closed")}>Mark provisional</button>
-                      <button style={{ ...actionBtn, backgroundColor: "#28a745" }} onClick={() => updateReportStatus(r.id, "closed")}>Confirm (close)</button>
-                      <button style={{ ...actionBtn, backgroundColor: "#d9534f" }} onClick={() => updateReportStatus(r.id, "rejected")}>Reject</button>
+                      <button style={smallBtn} onClick={() => focusOnReport(r)}>
+                        View on map
+                      </button>
+                      <button style={actionBtn} onClick={() => updateReportStatus(r.id, "provisional_closed")}>
+                        Mark provisional
+                      </button>
+                      <button style={{ ...actionBtn, backgroundColor: "#28a745" }} onClick={() => updateReportStatus(r.id, "closed")}>
+                        Confirm
+                      </button>
+                      <button style={{ ...actionBtn, backgroundColor: "#d9534f" }} onClick={() => updateReportStatus(r.id, "rejected")}>
+                        Reject
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -164,11 +183,13 @@ export default function Authority(): JSX.Element {
         </section>
       </div>
 
-      {/* Right: Map */}
+      {/* RIGHT: MAP */}
       <div style={{ flex: 1 }}>
         <MapContainer center={[46.77, 23.6]} zoom={10} style={{ height: "100%", width: "100%" }}>
+          <MapSetter mapRef={mapRef} />
+
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {/* Render report markers */}
+
           {reports.map((r) => (
             <Marker key={r.id} position={[r.lat, r.lng]}>
               <Popup>
@@ -176,24 +197,17 @@ export default function Authority(): JSX.Element {
                   <strong>{r.type}</strong>
                   <div style={{ fontSize: 12 }}>{new Date(r.createdAt).toLocaleString()}</div>
                   <div style={{ marginTop: 6 }}>{r.description}</div>
-                  <div style={{ marginTop: 8 }}>
-                    <button style={smallBtn} onClick={() => updateReportStatus(r.id, "provisional_closed")}>Provisional</button>
-                    <button style={{ ...smallBtn, marginLeft: 6 }} onClick={() => updateReportStatus(r.id, "closed")}>Confirm</button>
-                  </div>
                 </div>
               </Popup>
             </Marker>
           ))}
 
-          {/* Optionally render hazards - placeholder: no polygon rendering code here
-              If you have GeoJSON hazards, you can use GeoJSON component from react-leaflet */}
         </MapContainer>
       </div>
     </div>
   );
 }
 
-/* ---------------- styles ---------------- */
 const reportItem: React.CSSProperties = {
   padding: "12px",
   marginBottom: "10px",

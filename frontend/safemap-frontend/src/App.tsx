@@ -6,11 +6,12 @@ import Login from "./pages/Login";
 import RedirectHandler from "./services/RedirectHandler";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import MapRoute from "./pages/MapRoute";
+import Home from "./pages/Home";
 
 const App = () => {
   const location = useLocation();
 
-  const hideNavbar = location.pathname === "/login";
+  const hideNavbar = location.pathname === "/login" || location.pathname === "/citizen";
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/" element={<Navigate to="/login" />} />
 
           <Route path="/login" element={<Login />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/citizen" element={<Citizen />} />
           <Route path="/authority" element={<Authority />} />
           <Route path="/map" element={<MapView />} />
