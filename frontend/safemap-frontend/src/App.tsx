@@ -1,10 +1,12 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Citizen from "./pages/Citizen";
 import Authority from "./pages/Authority";
 import MapView from "./pages/MapView";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
+import RedirectHandler from "./services/RedirectHandler";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 const App = () => {
   const location = useLocation();
@@ -16,12 +18,15 @@ const App = () => {
       {!hideNavbar && <Navbar />}
       <div style={{ flex: 1 }}>
         <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Home />} />
           <Route path="/citizen" element={<Citizen />} />
           <Route path="/authority" element={<Authority />} />
           <Route path="/map" element={<MapView />} />
+          <Route path="/redirect" element={<RedirectHandler />} />
         </Routes>
+
       </div>
     </div>
   );

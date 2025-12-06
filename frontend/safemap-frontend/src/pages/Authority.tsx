@@ -9,8 +9,8 @@ interface Report {
   id: string;
   type: string;
   description?: string;
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lng: number;
   status: ReportStatus;
   createdAt: string;
   reporterId?: string;
@@ -36,7 +36,8 @@ export default function Authority() {
     setLoading(true);
     try {
       const data = await getReportsApi();
-      setReports(data || []);
+      console.log("Loaded reports!");
+      setReports(data.data.reports || []);
     } catch (err) {
       console.error("Failed to fetch reports:", err);
     } finally {
@@ -96,7 +97,9 @@ export default function Authority() {
 
   // quick helpers
   const pendingCount = reports.filter(r => r.status === "pending").length;
+  // const pendingCount = 0;
   const provCount = reports.filter(r => r.status === "provisional_closed").length;
+  // const provCount = 0;
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
@@ -126,7 +129,7 @@ export default function Authority() {
                     <div style={{ fontSize: 12, color: "#555" }}>{new Date(r.createdAt).toLocaleString()}</div>
                     <div style={{ marginTop: 6 }}>{r.description}</div>
                     <div style={{ fontSize: 12, marginTop: 6, color: "#333" }}>
-                      {r.latitude.toFixed(5)}, {r.longitude.toFixed(5)}
+                      {r.lat.toFixed(5)}, {r.lng.toFixed(5)}
                     </div>
                   </div>
 
@@ -155,7 +158,7 @@ export default function Authority() {
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {/* Render report markers */}
           {reports.map((r) => (
-            <Marker key={r.id} position={[r.latitude, r.longitude]}>
+            <Marker key={r.id} position={[r.lat, r.lng]}>
               <Popup>
                 <div style={{ minWidth: 220 }}>
                   <strong>{r.type}</strong>

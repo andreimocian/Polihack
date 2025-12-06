@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
 export async function getReportsApi() {
-  const res = await fetch(`${API_BASE}/api/reports`);
+  const res = await fetch(`${API_BASE}/api/v1/reports`);
   if (!res.ok) throw new Error("Failed to get reports");
   return res.json();
 }

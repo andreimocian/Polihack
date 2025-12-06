@@ -41,29 +41,60 @@ const Citizen = () => {
   };
 
   const submitReport = async () => {
-    if (!form.type) return alert("Select a hazard type.");
-    if (!form.location) return alert("Please get your location first.");
+  if (!form.type) return alert("Select a hazard type.");
+  if (!form.location) return alert("Please get your location first.");
 
+<<<<<<< HEAD
     const payload = {
       type: form.type,
       description: form.description,
       latt: form.location.lat,
       lng: form.location.lng,
     };
+=======
+ const payload = {
+  type: form.type,
+  description: form.description,
+  lat: form.location.lat,
+  lng: form.location.lng,
+};
+>>>>>>> 954738acee23c748abcf5987b25736a8c795ec8d
 
-    console.log("Sending report:", payload);
 
+<<<<<<< HEAD
     try {
       await citizenService.createReport(payload);
     } catch (error: any) {
       alert("Failed to submit report: " + error.message);
       return;
     }
+=======
+>>>>>>> 954738acee23c748abcf5987b25736a8c795ec8d
 
-    alert("Report submitted!");
+
+  try {
+    const response = await fetch("http://localhost:3000/api/v1/reports", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to submit report");
+    }
+
+    alert("Report submitted successfully!");
+
     setShowForm(false);
     setForm({ type: "", description: "", location: null });
-  };
+
+  } catch (err) {
+    alert("Error sending report: " + err);
+  }
+};
+
 
   return (
     <div style={{ padding: "20px" }}>
