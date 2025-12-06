@@ -60,27 +60,10 @@ const Citizen = () => {
     }
 
 
-  try {
-    const response = await fetch("http://localhost:3000/api/v1/reports", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to submit report");
-    }
-
     alert("Report submitted successfully!");
 
     setShowForm(false);
     setForm({ type: "", description: "", location: null });
-
-  } catch (err) {
-    alert("Error sending report: " + err);
-  }
 };
 
 
