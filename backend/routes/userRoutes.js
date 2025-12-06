@@ -1,6 +1,7 @@
 const passport = require('passport');
 authController = require('../controllers/authController');
 const express = require('express');
+const dotenv = require('dotenv');
 
 const router = express.Router();
 
@@ -10,8 +11,8 @@ router.get('/auth/google',
 
 router.get('/auth/google/callback',
     passport.authenticate('google', {
-        successRedirect: '/api/v1/users/me',
-        failureRedirect: '/api/v1/users/auth/failure'
+        successRedirect: `${process.env.FRONTEND_URL}/`,
+        failureRedirect: `${process.env.FRONTEND_URL}/login`
     })
 );
 

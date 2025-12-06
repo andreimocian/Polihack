@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const session = require('express-session');
+const cors = require('cors');
 
 const userRouter = require('./routes/userRoutes');
 const passport = require('passport');
@@ -10,6 +11,10 @@ const app = express();
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
+
+app.use(cors({
+    credentials: true
+}));
 
 app.use(express.json());
 
