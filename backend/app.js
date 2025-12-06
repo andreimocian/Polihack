@@ -8,6 +8,7 @@ const reportRouter = require('./routes/reportRoutes');
 const navigationRouter = require('./routes/navigationRoutes');
 const victimRouter = require('./routes/victimRoutes');
 const safePlaceRouter = require('./routes/safePlaceRoutes');
+const hazardRouter = require('./routes/hazardRoutes');
 const passport = require('passport');
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/nav', navigationRouter);
 app.use('/api/v1/victims', victimRouter);
 app.use('/api/v1/safe-places', safePlaceRouter);
+app.use('/api/v1/hazards', hazardRouter);
 
 app.get('/', (req, res) => {
     res.status(200).json({
