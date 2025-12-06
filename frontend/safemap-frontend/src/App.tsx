@@ -25,6 +25,7 @@ const App = () => {
           <Route path="/authority" element={<Authority />} />
           <Route path="/map" element={<MapView />} />
           <Route path="/redirect" element={<RedirectHandler />} />
+
         </Routes>
 
       </div>

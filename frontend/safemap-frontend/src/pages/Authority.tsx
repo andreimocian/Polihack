@@ -5,11 +5,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { socket } from "../services/socket";
-import { getReportsApi, patchReportApi, getHazardsApi, postSafePlaceApi } from "../services/api"; // Added postSafePlaceApi
+import { getReportsApi, patchReportApi, getHazardsApi, postSafePlaceApi } from "../services/api";
 import { fetchCurrentUser } from "../services/loginService";
-import type { SafePlace } from "../types"; // Assuming you have this in a types file
-
-// --- Types ---
+import type { SafePlace } from "../types"; 
+ 
 type ReportStatus = "pending" | "provisional_closed" | "approved" | "rejected";
 
 interface Report {
@@ -31,8 +30,7 @@ interface Hazard {
   status?: "provisional" | "confirmed" | "cleared";
 }
 
-// --- Icons ---
-// Green icon for the new Safe Place selection
+
 const newPlaceIcon = L.icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
@@ -41,7 +39,6 @@ const newPlaceIcon = L.icon({
   popupAnchor: [1, -34],
 });
 
-// --- Helper Components ---
 
 function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap();
@@ -51,7 +48,6 @@ function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | nul
   return null;
 }
 
-// NEW: Component to handle clicking on the map
 function MapClickEvents({ 
   isActive, 
   onLocationSelect 
@@ -69,7 +65,6 @@ function MapClickEvents({
   return null;
 }
 
-// --- Main Component ---
 
 export default function Authority(): JSX.Element {
   const [reports, setReports] = useState<Report[]>([]);
@@ -77,7 +72,6 @@ export default function Authority(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
-  // NEW STATES for Safe Place Creation
   const [isAddingSafePlace, setIsAddingSafePlace] = useState(false);
   const [newPlaceLoc, setNewPlaceLoc] = useState<LatLng | null>(null);
   const [newPlaceName, setNewPlaceName] = useState("");
@@ -87,7 +81,6 @@ export default function Authority(): JSX.Element {
   const pendingCount = reports.filter((r) => r.status === "pending").length;
   const provCount = reports.filter((r) => r.status === "provisional_closed").length;
 
-  // --- Data Loading ---
   const loadReports = useCallback(async () => {
     setLoading(true);
     try {
@@ -140,7 +133,6 @@ export default function Authority(): JSX.Element {
     };
   }, [loadHazards]);
 
-  // --- Actions ---
 
   async function updateReportStatus(reportId: string, status: ReportStatus) {
     try {
@@ -202,7 +194,6 @@ export default function Authority(): JSX.Element {
       <div style={{ width: 420, borderRight: "1px solid #eee", padding: 16, overflowY: "auto" }}>
         <h2>Authority Dashboard</h2>
 
-        {/* --- NEW: Safe Place Controls --- */}
         <div style={{ 
           marginBottom: 20, 
           padding: 15, 
@@ -220,7 +211,7 @@ export default function Authority(): JSX.Element {
           ) : (
             <div>
               <h4 style={{marginTop: 0}}>Adding Safe Place</h4>
-              <p style={{fontSize: 13, color: '#555'}}>1. Click on the map to set location.</p>
+              <p style={{fontSize: 13, color: '#555'}}>Click on the map to set location.</p>
               
               <input 
                 type="text" 
@@ -247,7 +238,6 @@ export default function Authority(): JSX.Element {
             </div>
           )}
         </div>
-        {/* -------------------------------- */}
 
         <p style={{ marginTop: 4, marginBottom: 12 }}>
           Incoming reports: <strong>{reports.length}</strong> — pending: <strong>{pendingCount}</strong>, provisional:{" "}
@@ -283,11 +273,34 @@ export default function Authority(): JSX.Element {
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <button style={smallBtn} onClick={() => focusOnReport(r)}>View on map</button>
-                      <button style={actionBtn} onClick={() => updateReportStatus(r._id, "provisional_closed")}>Mark resolved</button>
-                      <button style={{ ...actionBtn, backgroundColor: "#28a745" }} onClick={() => updateReportStatus(r._id, "approved")}>Confirm</button>
-                      <button style={{ ...actionBtn, backgroundColor: "#d9534f" }} onClick={() => updateReportStatus(r._id, "rejected")}>Reject</button>
-                    </div>
+
+              <button style={smallBtn} onClick={() => focusOnReport(r)}>
+                View on map
+              </button>
+
+             <select
+                style={{
+                  padding: "8px",
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  cursor: "pointer",
+                  background: "#fff",
+                  fontSize: 13
+                }}
+                defaultValue=""
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) return;
+                  updateReportStatus(r._id, value as ReportStatus);
+                }}
+              >
+                <option value="">Select action...</option>
+                <option value="provisional_closed">Mark resolved</option>
+                <option value="approved">Confirm</option>
+                <option value="rejected">Reject</option>
+              </select>
+            </div>
+
                   </div>
                 </div>
               </li>
@@ -305,7 +318,6 @@ export default function Authority(): JSX.Element {
         >
           <MapSetter mapRef={mapRef} />
           
-          {/* Listens for clicks only when adding safe place */}
           <MapClickEvents 
             isActive={isAddingSafePlace} 
             onLocationSelect={(latlng) => setNewPlaceLoc(latlng)} 
@@ -313,7 +325,6 @@ export default function Authority(): JSX.Element {
 
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-          {/* Existing Reports */}
           {reports.map((r) => (
             <Marker key={r._id} position={[r.lat, r.lng]}>
               <Popup>
@@ -326,7 +337,6 @@ export default function Authority(): JSX.Element {
             </Marker>
           ))}
 
-          {/* NEW: Temporary Marker for the Safe Place being added */}
           {isAddingSafePlace && newPlaceLoc && (
             <Marker position={newPlaceLoc} icon={newPlaceIcon}>
               <Popup>New Safe Place Location</Popup>
