@@ -37,13 +37,10 @@ export async function getSafePlacesApi() {
 }
 
 export async function postSafePlaceApi(place: { lat: number; lng: number; name?: string }) {
-  // Adjust base URL if your API is configured differently (e.g. via axios instance)
   const response = await fetch("http://localhost:3000/api/v1/safe-places", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      // Include Authorization header here if needed, e.g.:
-      // "Authorization": `Bearer ${localStorage.getItem('token')}` 
     },
     body: JSON.stringify(place),
   });

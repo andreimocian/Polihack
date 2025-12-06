@@ -83,7 +83,6 @@ export default function Home() {
               </Typography>
             )}
 
-            {/* Stats + Latest 5 reports box */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                 <Typography variant="h6" sx={{ mb: { xs: 0, sm: 0 } }}>

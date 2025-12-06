@@ -8,7 +8,6 @@ import { socket } from "../services/socket";
 import { getReportsApi, patchReportApi, getHazardsApi, postSafePlaceApi } from "../services/api";
 import { fetchCurrentUser } from "../services/loginService";
 
-// --- Types ---
 type ReportStatus = "pending" | "provisional_closed" | "approved" | "rejected";
 
 interface Report {
@@ -26,7 +25,7 @@ interface Report {
 interface HazardGeometry {
   date: string;
   type: string;
-  coordinates: [number, number]; // [Longitude, Latitude]
+  coordinates: [number, number]; 
   magnitudeValue?: number;
   magnitudeUnit?: string;
 }
@@ -38,18 +37,13 @@ interface Hazard {
   geometry: HazardGeometry[]; 
 }
 
-// --- SYMBOL CONFIGURATION ---
-
-// Helper to create a "Floating Symbol" (No Pin Background)
 const createSymbol = (emoji: string) => {
   return L.divIcon({
-    // We use a div with the emoji inside. 
-    // text-shadow adds a small white outline so it is visible on dark maps/satellite
     html: `<div style="font-size: 30px; line-height: 30px; text-shadow: 0 0 3px #fff;">${emoji}</div>`,
-    className: 'hazard-symbol-icon', // Prevents default leaflet square background
+    className: 'hazard-symbol-icon', 
     iconSize: [30, 30],
-    iconAnchor: [15, 15], // Center the emoji on the coordinates
-    popupAnchor: [0, -15] // Popup appears slightly above
+    iconAnchor: [15, 15], 
+    popupAnchor: [0, -15] 
   });
 };
 
@@ -77,8 +71,6 @@ const getHazardSymbol = (category?: string) => {
   return symbols.default;
 };
 
-// --- Helper Components ---
-
 function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap();
   useEffect(() => {
@@ -96,7 +88,6 @@ function MapClickEvents({ isActive, onLocationSelect }: { isActive: boolean; onL
   return null;
 }
 
-// --- Main Component ---
 
 export default function Authority(): JSX.Element {
   const [reports, setReports] = useState<Report[]>([]);
@@ -105,7 +96,6 @@ export default function Authority(): JSX.Element {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showHazards, setShowHazards] = useState(true);
 
-  // Safe Place State
   const [isAddingSafePlace, setIsAddingSafePlace] = useState(false);
   const [newPlaceLoc, setNewPlaceLoc] = useState<LatLng | null>(null);
   const [newPlaceName, setNewPlaceName] = useState("");
@@ -137,7 +127,6 @@ export default function Authority(): JSX.Element {
     return () => clearInterval(id);
   }, [loadReports, loadHazards]);
 
-  // Socket listeners...
   useEffect(() => {
     socket.on("reportCreated", (r: any) => setReports((prev) => [r.data || r, ...prev]));
     socket.on("reportUpdated", (r: any) => {
@@ -152,7 +141,6 @@ export default function Authority(): JSX.Element {
     };
   }, [loadHazards]);
 
-  // Actions...
   async function updateReportStatus(reportId: string, status: ReportStatus) {
     try {
       const res = await patchReportApi(reportId, { status });
@@ -181,7 +169,6 @@ export default function Authority(): JSX.Element {
       <div style={{ width: 420, borderRight: "1px solid #eee", padding: 16, overflowY: "auto" }}>
         <h2>Authority Dashboard</h2>
 
-        {/* Add Safe Place Widget */}
         <div style={{ marginBottom: 20, padding: 15, backgroundColor: isAddingSafePlace ? "#e8f5e9" : "#f8f9fa", borderRadius: 8, border: "1px solid #eee" }}>
           {!isAddingSafePlace ? (
             <button onClick={() => setIsAddingSafePlace(true)} style={{ ...btn, width: '100%', backgroundColor: '#28a745', color: 'white' }}>+ Add New Safe Place</button>
@@ -198,7 +185,6 @@ export default function Authority(): JSX.Element {
           )}
         </div>
 
-        {/* Controls */}
         <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={loadReports} style={btn}>Refresh Reports</button>
@@ -210,7 +196,6 @@ export default function Authority(): JSX.Element {
           </label>
         </div>
 
-        {/* Reports List */}
         <section>
           <h3>Reports</h3>
           <ul style={{ listStyle: "none", padding: 0 }}>
@@ -245,14 +230,13 @@ export default function Authority(): JSX.Element {
           <MapClickEvents isActive={isAddingSafePlace} onLocationSelect={(latlng) => setNewPlaceLoc(latlng)} />
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-          {/* 1. Reports (Standard Markers) */}
           {reports.map((r) => (
             <Marker key={r._id} position={[r.lat, r.lng]}>
               <Popup><strong>{r.type}</strong><br/>{r.description}</Popup>
             </Marker>
           ))}
 
-          {/* 2. Hazards (SYMBOLS/EMOJIS) */}
+
           {showHazards && hazards.map((h) => {
              const geo = h.geometry && h.geometry[0];
              if (!geo || geo.type !== 'Point' || !geo.coordinates) return null;
@@ -276,7 +260,6 @@ export default function Authority(): JSX.Element {
              );
           })}
 
-          {/* 3. New Safe Place (Symbol) */}
           {isAddingSafePlace && newPlaceLoc && (
             <Marker position={newPlaceLoc} icon={symbols.safePlace}>
               <Popup>New Safe Place Location</Popup>
@@ -288,10 +271,6 @@ export default function Authority(): JSX.Element {
     </div>
   );
 }
-
-// --- Styles ---
-// (Ensure this is in your CSS file or a style tag to remove the default Leaflet square background)
-// .hazard-symbol-icon { background: transparent; border: none; }
 
 const reportItem: React.CSSProperties = { padding: "12px", marginBottom: "10px", backgroundColor: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" };
 const btn: React.CSSProperties = { padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: "pointer" };

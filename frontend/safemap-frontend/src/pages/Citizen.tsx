@@ -72,7 +72,6 @@ const Citizen = () => {
       <h1>Citizen Panel</h1>
       <p>Your safety companion during emergencies</p>
 
-      {/* Main Buttons */}
       <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginTop: "20px" }}>
 
         <button
@@ -96,8 +95,7 @@ const Citizen = () => {
           📍 View Live Map
         </button>
       </div>
-      
-      {/* Report Form */}
+
       {showForm && (
         <div style={formBox}>
           <h2>Report a Hazard</h2>
@@ -149,7 +147,6 @@ const Citizen = () => {
   );
 };
 
-/* -------- STYLES -------- */
 
 const bigButton: React.CSSProperties = {
   fontSize: "18px",

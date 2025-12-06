@@ -9,7 +9,7 @@ export interface SafePlace {
 
 export interface Report {
   id: string;
-  type: string; // "blocked_road" | "flood" | "landslide" | ...
+  type: string; 
   description?: string;
   lat: number;
   lng: number;
