@@ -19,7 +19,6 @@ const userSchema = mongoose.Schema({
     cnp: {
         type: String,
         // unique: true,
-        // sparse: true,
     },
     role: {
         type: String,
