@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { fetchCurrentUser, logout } from "../services/loginService";
 import { Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -45,14 +45,42 @@ const Navbar = () => {
         SafeMap
       </Typography>
 
+      {/* Home button (dashboard) */}
+      <Button
+        component={NavLink}
+        to="/home"
+        end
+        color="inherit"
+        variant="text"
+        sx={{
+          textTransform: 'none',
+          mr: 1,
+          '&.active': {
+            bgcolor: 'primary.dark',
+            color: 'primary.contrastText',
+            boxShadow: 3,
+          },
+        }}
+      >
+        Home
+      </Button>
+
       {/* autoritate: Home + Authority */}
       {role === "autoritate" && (
         <Button
-          component={Link}
+          component={NavLink}
           to="/authority"
+          end
           color="inherit"
           variant="text"
-          sx={{ textTransform: "none" }}
+          sx={{
+            textTransform: "none",
+            '&.active': {
+              bgcolor: 'primary.dark',
+              color: 'primary.contrastText',
+              boxShadow: 3,
+            },
+          }}
         >
           Authority Panel
         </Button>
@@ -61,11 +89,19 @@ const Navbar = () => {
       {/* voluntar: Home + Map */}
       {role === "voluntar" && (
         <Button
-          component={Link}
+          component={NavLink}
           to="/map"
+          end
           color="inherit"
           variant="text"
-          sx={{ textTransform: "none" }}
+          sx={{
+            textTransform: "none",
+            '&.active': {
+              bgcolor: 'primary.dark',
+              color: 'primary.contrastText',
+              boxShadow: 3,
+            },
+          }}
         >
           Map
         </Button>
