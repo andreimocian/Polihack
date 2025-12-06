@@ -26,6 +26,7 @@ app.use(session({
     secret: 'cat',
     resave: false,
     saveUninitialized: true,
+    credentials: true,
     // cookie: { secure: true }
 }));
 

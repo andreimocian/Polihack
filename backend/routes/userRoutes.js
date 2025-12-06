@@ -25,14 +25,14 @@ router.get('/me', authController.protect, (req, res) => {
     res.send('Hello!');
 })
 
-router.post('/logout', (req, res) => {
-    req.session.destroy();
-    req.logOut((err) => {
-        if (err) {
-            return res.send(err, 404);
-        }
+router.get('/logout', (req, res, next) => {
+    req.logout(function (err) {
+        if (err) { return next(err); }
+        req.session.destroy();
+        res.redirect(`${process.env.FRONTEND_URL}/login`);
     });
-    res.send('Goodbye');
 });
+
+
 
 module.exports = router;

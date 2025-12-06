@@ -5,7 +5,8 @@ export default function Login() {
     return (
         <div>
             <h1>Login Page</h1>
-            <Button variant="contained" onClick={loginWithGoogle}>Login</Button>
+            <Button variant="contained" onClick={loginWithGoogle}>Login with Google</Button>
+            <Button variant='contained' onClick={() => window.location.href = '/citizen'}>Citizen actions</Button>
         </div>
     );
 }
