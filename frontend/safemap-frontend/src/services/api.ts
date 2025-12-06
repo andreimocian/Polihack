@@ -7,7 +7,7 @@ export async function getReportsApi() {
 }
 
 export async function patchReportApi(id: string, body: any) {
-  const res = await fetch(`${API_BASE}/api/reports/${id}`, {
+  const res = await fetch(`${API_BASE}/api/v1/reports/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

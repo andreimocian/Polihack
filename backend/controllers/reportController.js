@@ -42,7 +42,7 @@ exports.updateReport = async (req, res) => {
       runValidators: true,
     });
 
-    io.emit("reportUpdated", updated); // 🔥 SOCKET EMIT
+    // io.emit("reportUpdated", updated); // 🔥 SOCKET EMIT
 
     res.status(200).json({
       status: 'success',

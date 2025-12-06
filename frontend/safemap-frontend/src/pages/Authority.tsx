@@ -8,10 +8,10 @@ import { socket } from "../services/socket";
 import { getReportsApi, patchReportApi, getHazardsApi } from "../services/api";
 import { fetchCurrentUser } from "../services/loginService";
 
-type ReportStatus = "pending" | "provisional_closed" | "closed" | "rejected";
+type ReportStatus = "pending" | "provisional_closed" | "approved" | "rejected";
 
 interface Report {
-  id: string;
+  _id: string;
   type: string;
   description?: string;
   lat: number;
@@ -85,8 +85,14 @@ export default function Authority(): JSX.Element {
 
 
   useEffect(() => {
-    socket.on("reportCreated", (r: Report) => setReports((prev) => [r, ...prev]));
-    socket.on("reportUpdated", (r: Report) => setReports((prev) => prev.map((p) => (p.id === r.id ? r : p))));
+    socket.on("reportCreated", (r: any) => {
+      const report = r.data || r;
+      setReports((prev) => [report, ...prev]);
+    });
+    socket.on("reportUpdated", (r: any) => {
+      const report = r.data || r;
+      setReports((prev) => prev.map((p) => (p._id === report._id ? report : p)));
+    });
     socket.on("hazardsUpdated", () => loadHazards());
 
     return () => {
@@ -99,8 +105,9 @@ export default function Authority(): JSX.Element {
 
   async function updateReportStatus(reportId: string, status: ReportStatus) {
     try {
-      const updated = await patchReportApi(reportId, { status });
-      setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
+      const res = await patchReportApi(reportId, { status });
+      const updated = res.data || res;
+      setReports((prev) => prev.map((r) => (r._id === reportId ? updated : r)));
     } catch (err) {
       console.error("Failed to update report:", err);
       alert("Failed to update report (see console).");
@@ -145,7 +152,7 @@ export default function Authority(): JSX.Element {
 
           <ul style={{ listStyle: "none", padding: 0 }}>
             {reports.map((r) => (
-              <li key={r.id} style={reportItem}>
+              <li key={r._id} style={reportItem}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <div>
                     <strong>{r.type}</strong>
@@ -158,20 +165,20 @@ export default function Authority(): JSX.Element {
 
                   <div style={{ textAlign: "right" }}>
                     <div style={{ marginBottom: 8 }}>
-                      <span style={statusBadge(r.status)}>{r.status}</span>
+                      <span style={statusBadge(r.status)}>{statusLabel(r.status)}</span>
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <button style={smallBtn} onClick={() => focusOnReport(r)}>
                         View on map
                       </button>
-                      <button style={actionBtn} onClick={() => updateReportStatus(r.id, "provisional_closed")}>
-                        Mark provisional
+                      <button style={actionBtn} onClick={() => updateReportStatus(r._id, "provisional_closed")}>
+                        Mark resolved
                       </button>
-                      <button style={{ ...actionBtn, backgroundColor: "#28a745" }} onClick={() => updateReportStatus(r.id, "closed")}>
+                      <button style={{ ...actionBtn, backgroundColor: "#28a745" }} onClick={() => updateReportStatus(r._id, "approved")}>
                         Confirm
                       </button>
-                      <button style={{ ...actionBtn, backgroundColor: "#d9534f" }} onClick={() => updateReportStatus(r.id, "rejected")}>
+                      <button style={{ ...actionBtn, backgroundColor: "#d9534f" }} onClick={() => updateReportStatus(r._id, "rejected")}>
                         Reject
                       </button>
                     </div>
@@ -191,7 +198,7 @@ export default function Authority(): JSX.Element {
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
           {reports.map((r) => (
-            <Marker key={r.id} position={[r.lat, r.lng]}>
+            <Marker key={r._id} position={[r.lat, r.lng]}>
               <Popup>
                 <div style={{ minWidth: 220 }}>
                   <strong>{r.type}</strong>
@@ -253,7 +260,12 @@ const statusBadge = (status: ReportStatus): React.CSSProperties => {
   };
   if (status === "pending") return { ...base, backgroundColor: "#6c757d" };
   if (status === "provisional_closed") return { ...base, backgroundColor: "#f0ad4e" };
-  if (status === "closed") return { ...base, backgroundColor: "#d9534f" };
-  if (status === "rejected") return { ...base, backgroundColor: "#5bc0de" };
+  if (status === "approved") return { ...base, backgroundColor: "#28a745" };
+  if (status === "rejected") return { ...base, backgroundColor: "#d9534f" };
   return base;
+};
+
+const statusLabel = (status: ReportStatus) => {
+  if (status === "provisional_closed") return "resolved";
+  return status;
 };
