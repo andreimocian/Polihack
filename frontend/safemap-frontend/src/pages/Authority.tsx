@@ -272,7 +272,7 @@ export default function Authority(): JSX.Element {
                     <div>{r.description}</div>
                   </div>
                   <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 5 }}>
-                     <span style={statusBadge(r.status)}>{r.status}</span>
+                     <span style={statusBadge(r.status)}>{r.status === "provisional_closed" ? "closed" : r.status}</span>
                      <button style={smallBtn} onClick={() => focusOnReport(r)}>View</button>
                      <select onChange={(e) => e.target.value && updateReportStatus(r._id, e.target.value as ReportStatus)} defaultValue="" style={{padding: 4}}>
                         <option value="">Action...</option>
@@ -341,7 +341,7 @@ const btn: React.CSSProperties = { padding: "8px 12px", borderRadius: 8, border:
 const smallBtn: React.CSSProperties = { padding: "6px 8px", borderRadius: 6, border: "none", background: "#1e90ff", color: "#fff", cursor: "pointer", fontSize: 12 };
 const actionBtn: React.CSSProperties = { padding: "8px 10px", borderRadius: 8, border: "none", background: "#ff9900", color: "#fff", cursor: "pointer", fontSize: 13 };
 const statusBadge = (status: ReportStatus): React.CSSProperties => {
-  const base: React.CSSProperties = { padding: "6px 8px", borderRadius: 6, color: "#fff", fontSize: 12 };
+  const base: React.CSSProperties = { padding: "6px 8px", borderRadius: 6, color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: "auto" };
   if (status === "pending") return { ...base, backgroundColor: "#6c757d" };
   if (status === "provisional_closed") return { ...base, backgroundColor: "#f0ad4e" };
   if (status === "approved") return { ...base, backgroundColor: "#28a745" };
