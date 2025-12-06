@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const userRouter = require('./routes/userRoutes');
 const reportRouter = require('./routes/reportRoutes');
+const navigationRouter = require('./routes/navigationRoutes');
 const passport = require('passport');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use(passport.session());
 
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reports', reportRouter);
+app.use('/api/v1/nav', navigationRouter);
 
 app.get('/', (req, res) => {
     res.status(200).json({
