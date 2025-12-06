@@ -1,12 +1,50 @@
-import Button from '@mui/material/Button';
+import { Box, Button, Container, Paper, Typography } from '@mui/material';
 import { loginWithGoogle } from '../services/loginService';
 
 export default function Login() {
     return (
-        <div>
-            <h1>Login Page</h1>
-            <Button variant="contained" onClick={loginWithGoogle}>Login with Google</Button>
-            <Button variant='contained' onClick={() => window.location.href = '/citizen'}>Citizen actions</Button>
-        </div>
+        <Box sx={{ minHeight: 'calc(100vh - 64px)', bgcolor: 'background.default', display: 'flex', alignItems: 'center' }}>
+            <Container maxWidth="sm">
+                <Paper elevation={3} sx={{ p: { xs: 3, sm: 5 }, borderRadius: 2 }}>
+                    <Box sx={{ textAlign: 'center', mb: 2 }}>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            Welcome to SafeMap
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}>
+                            Sign in to access features and report or view safe places.
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'grid', gap: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={loginWithGoogle}
+                            sx={{ py: 1.5, textTransform: 'none', fontWeight: 600 }}
+                        >
+                            Continue with Google
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => (window.location.href = '/citizen')}
+                            sx={{ py: 1.25, textTransform: 'none' }}
+                        >
+                            Continue as Citizen
+                        </Button>
+
+                        <Button
+                            variant="text"
+                            color="inherit"
+                            onClick={() => (window.location.href = '/')}
+                            sx={{ textTransform: 'none', mt: 1 }}
+                        >
+                            Back to Home
+                        </Button>
+                    </Box>
+                </Paper>
+            </Container>
+        </Box>
     );
 }

@@ -21,7 +21,7 @@ exports.createSafePlace = async (req, res) => {
   try {
     const newSafePlace = await SafePlace.create(req.body);
 
-    io.emit("safePlaceCreated", newSafePlace);  // 🔥 SOCKET EMIT
+    // io.emit("safePlaceCreated", newSafePlace);  // 🔥 SOCKET EMIT
 
     res.status(201).json({
       status: 'success',

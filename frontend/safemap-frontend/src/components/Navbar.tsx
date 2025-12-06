@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { fetchCurrentUser, logout } from "../services/loginService";
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
+import {Typography} from "@mui/material";
 
 export function useCurrentUser() {
   const [user, setUser] = useState<any | null>(null);
@@ -18,17 +19,76 @@ const Navbar = () => {
   const role = user?.role;
 
   return (
-    <nav style={{ display: "flex", gap: "20px", padding: "10px" }}>
-      <Link to="/">Home</Link>
+    <Box
+      component="nav"
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        px: 3,
+        py: 1.5,
+        bgcolor: "primary.main",
+        color: "primary.contrastText",
+        boxShadow: 2,
+        position: "sticky",
+        top: 0,
+        zIndex: 1100,
+      }}
+    >
+      {/* App title / logo placeholder */}
+      <Typography variant="h6" sx={{ fontWeight: 600, mr: 2 }}>
+        SafeMap
+      </Typography>
+
+      {/* always visible */}
+      <Button
+        component={Link}
+        to="/"
+        color="inherit"
+        variant="text"
+        sx={{ textTransform: "none" }}
+      >
+        Home
+      </Button>
+
+      {/* autoritate: Home + Authority */}
       {role === "autoritate" && (
-        <Link to="/authority">Authority</Link>
+        <Button
+          component={Link}
+          to="/authority"
+          color="inherit"
+          variant="text"
+          sx={{ textTransform: "none" }}
+        >
+          Authority
+        </Button>
       )}
 
+      {/* voluntar: Home + Map */}
       {role === "voluntar" && (
-        <Link to="/map">Map</Link>
+        <Button
+          component={Link}
+          to="/map"
+          color="inherit"
+          variant="text"
+          sx={{ textTransform: "none" }}
+        >
+          Map
+        </Button>
       )}
-      <Button variant="outlined" onClick={logout}>Logout</Button>
-    </nav>
+
+      {/* push logout to the right */}
+      <Box sx={{ ml: "auto" }}>
+        <Button
+          variant="outlined"
+          color="inherit"
+          onClick={logout}
+          sx={{ textTransform: "none" }}
+        >
+          Logout
+        </Button>
+      </Box>
+    </Box>
   );
 };
 
