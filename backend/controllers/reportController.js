@@ -6,6 +6,8 @@ exports.getAllReports = async (req, res) => {
   try {
     const reports = await Report.find();
 
+    displayReportsNumber = req.params.number;
+
     res.status(200).json({
       status: 'success',
       results: reports.length,

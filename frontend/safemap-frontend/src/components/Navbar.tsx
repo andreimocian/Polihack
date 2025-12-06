@@ -35,21 +35,15 @@ const Navbar = () => {
         zIndex: 1100,
       }}
     >
-      {/* App title / logo placeholder */}
-      <Typography variant="h6" sx={{ fontWeight: 600, mr: 2 }}>
+      {/* App title / logo placeholder (clickable) */}
+      <Typography
+        variant="h6"
+        component={Link}
+        to="/home"
+        sx={{ fontWeight: 600, mr: 2, color: 'inherit', textDecoration: 'none' }}
+      >
         SafeMap
       </Typography>
-
-      {/* always visible */}
-      <Button
-        component={Link}
-        to="/"
-        color="inherit"
-        variant="text"
-        sx={{ textTransform: "none" }}
-      >
-        Home
-      </Button>
 
       {/* autoritate: Home + Authority */}
       {role === "autoritate" && (
@@ -60,7 +54,7 @@ const Navbar = () => {
           variant="text"
           sx={{ textTransform: "none" }}
         >
-          Authority
+          Authority Panel
         </Button>
       )}
 

@@ -11,22 +11,13 @@ export default function Login() {
                             Welcome to SafeMap
                         </Typography>
                         <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}>
-                            Sign in to access features and report or view safe places.
+                            Sign in to access institutional features and report or view safe places.
                         </Typography>
                     </Box>
 
                     <Box sx={{ display: 'grid', gap: 2 }}>
                         <Button
                             variant="contained"
-                            color="primary"
-                            onClick={loginWithGoogle}
-                            sx={{ py: 1.5, textTransform: 'none', fontWeight: 600 }}
-                        >
-                            Continue with Google
-                        </Button>
-
-                        <Button
-                            variant="outlined"
                             color="primary"
                             onClick={() => (window.location.href = '/citizen')}
                             sx={{ py: 1.25, textTransform: 'none' }}
@@ -35,13 +26,14 @@ export default function Login() {
                         </Button>
 
                         <Button
-                            variant="text"
-                            color="inherit"
-                            onClick={() => (window.location.href = '/')}
-                            sx={{ textTransform: 'none', mt: 1 }}
+                            variant="outlined"
+                            color="primary"
+                            onClick={loginWithGoogle}
+                            sx={{ py: 1.5, textTransform: 'none', fontWeight: 600 }}
                         >
-                            Back to Home
+                            Continue with Google (Authority/Volunteer)
                         </Button>
+
                     </Box>
                 </Paper>
             </Container>
