@@ -1,8 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { fetchCurrentUser, logout } from "../services/loginService";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import {Typography} from "@mui/material";
 
 export function useCurrentUser() {
   const [user, setUser] = useState<any | null>(null);
@@ -35,7 +34,6 @@ const Navbar = () => {
         zIndex: 1100,
       }}
     >
-      {/* App title / logo placeholder (clickable) */}
       <Typography
         variant="h6"
         component={Link}
@@ -45,27 +43,7 @@ const Navbar = () => {
         SafeMap
       </Typography>
 
-      {/* Home button (dashboard) */}
-      <Button
-        component={NavLink}
-        to="/home"
-        end
-        color="inherit"
-        variant="text"
-        sx={{
-          textTransform: 'none',
-          mr: 1,
-          '&.active': {
-            bgcolor: 'primary.dark',
-            color: 'primary.contrastText',
-            boxShadow: 3,
-          },
-        }}
-      >
-        Home
-      </Button>
-
-      {/* autoritate: Home + Authority */}
+      {/* autoritate */}
       {role === "autoritate" && (
         <Button
           component={NavLink}
@@ -86,28 +64,32 @@ const Navbar = () => {
         </Button>
       )}
 
-      {/* voluntar: Home + Map */}
+      {/* voluntar */}
       {role === "voluntar" && (
-        <Button
-          component={NavLink}
-          to="/map"
-          end
-          color="inherit"
-          variant="text"
-          sx={{
-            textTransform: "none",
-            '&.active': {
-              bgcolor: 'primary.dark',
-              color: 'primary.contrastText',
-              boxShadow: 3,
-            },
-          }}
-        >
-          Map
-        </Button>
+        <>
+          <Button
+            component={Link}
+            to="/map"
+            color="inherit"
+            variant="text"
+            sx={{ textTransform: "none" }}
+          >
+            Map
+          </Button>
+
+          <Button
+            component={Link}
+            to="/add-shelter"
+            color="inherit"
+            variant="text"
+            sx={{ textTransform: "none" }}
+          >
+            Add Shelter
+          </Button>
+        </>
       )}
 
-      {/* push logout to the right */}
+      {/* logout aligned right */}
       <Box sx={{ ml: "auto" }}>
         <Button
           variant="outlined"

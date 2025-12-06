@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import RedirectHandler from "./services/RedirectHandler";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
+import AddShelter from "./pages/AddShelter";
 
 const App = () => {
   const location = useLocation();
@@ -25,6 +26,8 @@ const App = () => {
           <Route path="/authority" element={<Authority />} />
           <Route path="/map" element={<MapView />} />
           <Route path="/redirect" element={<RedirectHandler />} />
+          <Route path="/add-shelter" element={<AddShelter />} />
+
 
         </Routes>
 

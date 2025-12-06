@@ -96,7 +96,7 @@ const Citizen = () => {
           📍 View Live Map
         </button>
       </div>
-
+      
       {/* Report Form */}
       {showForm && (
         <div style={formBox}>
