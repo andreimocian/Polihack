@@ -10,13 +10,11 @@ const safePlaceSchema = mongoose.Schema({
     type: Number,
     required: [true, 'A report must have a longitude'],
   },
-  name: {
-    type: String,
-    required: false
+  capacity: {
+    type: Number
   },
-  id: {
-    type: String,
-    required: false
+  address: {
+    type: String
   }
 });
 

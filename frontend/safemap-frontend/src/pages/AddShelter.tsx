@@ -10,7 +10,9 @@ import {
   Alert,
   CardHeader,
   Paper,
+  Snackbar,
 } from "@mui/material";
+import safeSpaceService from "../services/safeSpaceService";
 
 interface ShelterData {
   address: string;
@@ -24,6 +26,10 @@ const AddShelterPanel = () => {
     capacity: "",
     location: null,
   });
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
 
   const getLocation = () => {
     if (!navigator.geolocation)
@@ -124,6 +130,31 @@ const AddShelterPanel = () => {
           )}
 
           <Button
+            onClick={async () => {
+              try {
+                const res = await safeSpaceService.createSafeSpace(
+                  newShelter.address,
+                  newShelter.capacity as number,
+                  newShelter.location!.lat,
+                  newShelter.location!.lng
+                );
+                // backend returns { status: 'success', data: ... } or similar
+                if (res && (res.status === "success" || res.id || res._id)) {
+                  setSnackbarMsg("Shelter saved successfully.");
+                  setSnackbarSeverity("success");
+                  setSnackbarOpen(true);
+                  // Optionally clear form
+                  setNewShelter({ address: "", capacity: "", location: null });
+                } else {
+                  throw new Error(res?.message || "Failed to save shelter");
+                }
+              } catch (err: any) {
+                console.error("createSafeSpace error", err);
+                setSnackbarMsg(err?.message || "Failed to save shelter");
+                setSnackbarSeverity("error");
+                setSnackbarOpen(true);
+              }
+            }}
             variant="contained"
             color="success"
             fullWidth
@@ -139,6 +170,16 @@ const AddShelterPanel = () => {
           >
             Save Shelter
           </Button>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={4000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+              {snackbarMsg}
+            </Alert>
+          </Snackbar>
         </CardContent>
       </Paper>
     </Box>

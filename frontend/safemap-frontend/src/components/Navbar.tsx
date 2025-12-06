@@ -13,6 +13,25 @@ export function useCurrentUser() {
   return user;
 }
 
+const NavButton = (props: any) => (
+  <Button
+    component={NavLink}
+    end
+    color="inherit"
+    variant="text"
+    sx={{
+      textTransform: 'none',
+      mr: 1,
+      '&.active': {
+        bgcolor: 'primary.dark',
+        color: 'primary.contrastText',
+        boxShadow: 3,
+      },
+    }}
+    {...props}
+  />
+);
+
 const Navbar = () => {
   const user = useCurrentUser();
   const role = user?.role;
@@ -43,49 +62,16 @@ const Navbar = () => {
         SafeMap
       </Typography>
 
+      <NavButton to="/home">Home</NavButton>
+
       {/* autoritate */}
-      {role === "autoritate" && (
-        <Button
-          component={NavLink}
-          to="/authority"
-          end
-          color="inherit"
-          variant="text"
-          sx={{
-            textTransform: "none",
-            '&.active': {
-              bgcolor: 'primary.dark',
-              color: 'primary.contrastText',
-              boxShadow: 3,
-            },
-          }}
-        >
-          Authority Panel
-        </Button>
-      )}
+      {role === "autoritate" && <NavButton to="/authority">Authority Panel</NavButton>}
 
       {/* voluntar */}
       {role === "voluntar" && (
         <>
-          <Button
-            component={Link}
-            to="/map"
-            color="inherit"
-            variant="text"
-            sx={{ textTransform: "none" }}
-          >
-            Map
-          </Button>
-
-          <Button
-            component={Link}
-            to="/add-shelter"
-            color="inherit"
-            variant="text"
-            sx={{ textTransform: "none" }}
-          >
-            Add Shelter
-          </Button>
+          <NavButton to="/map">Map</NavButton>
+          <NavButton to="/add-shelter">Add Shelter</NavButton>
         </>
       )}
 
