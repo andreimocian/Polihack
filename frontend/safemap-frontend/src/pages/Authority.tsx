@@ -289,7 +289,7 @@ export default function Authority(): JSX.Element {
 
       {/* RIGHT: MAP */}
       <div style={{ flex: 1 }}>
-        <MapContainer center={[38, -95]} zoom={4} style={{ height: "100%", width: "100%", cursor: isAddingSafePlace ? "crosshair" : "grab" }}>
+        <MapContainer center={[45.9432, 24.9668]} zoom={7} style={{ height: "100%", width: "100%", cursor: isAddingSafePlace ? "crosshair" : "grab" }}>
           <MapSetter mapRef={mapRef} />
           <MapClickEvents isActive={isAddingSafePlace} onLocationSelect={(latlng) => setNewPlaceLoc(latlng)} />
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
