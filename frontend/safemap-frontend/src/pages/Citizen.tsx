@@ -44,32 +44,20 @@ const Citizen = () => {
   if (!form.type) return alert("Select a hazard type.");
   if (!form.location) return alert("Please get your location first.");
 
-<<<<<<< HEAD
     const payload = {
       type: form.type,
       description: form.description,
-      latt: form.location.lat,
+      lat: form.location.lat,
       lng: form.location.lng,
     };
-=======
- const payload = {
-  type: form.type,
-  description: form.description,
-  lat: form.location.lat,
-  lng: form.location.lng,
-};
->>>>>>> 954738acee23c748abcf5987b25736a8c795ec8d
 
 
-<<<<<<< HEAD
     try {
       await citizenService.createReport(payload);
     } catch (error: any) {
       alert("Failed to submit report: " + error.message);
       return;
     }
-=======
->>>>>>> 954738acee23c748abcf5987b25736a8c795ec8d
 
 
   try {
