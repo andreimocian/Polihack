@@ -4,6 +4,7 @@ const session = require('express-session');
 const cors = require('cors');
 
 const userRouter = require('./routes/userRoutes');
+const reportRouter = require('./routes/reportRoutes');
 const passport = require('passport');
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reports', reportRouter);
 
 app.get('/', (req, res) => {
     res.status(200).json({
