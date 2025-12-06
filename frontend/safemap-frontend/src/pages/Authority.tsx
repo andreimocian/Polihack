@@ -1,5 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+
+import React, { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import type { Map as LeafletMap } from "leaflet";
+import "leaflet/dist/leaflet.css";
+
 import { socket } from "../services/socket"; 
 import { getReportsApi, patchReportApi, getHazardsApi } from "../services/api";
 
@@ -25,7 +29,15 @@ interface Hazard {
   status?: "provisional" | "confirmed" | "cleared";
 }
 
-export default function Authority() {
+function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
+  const map = useMap();
+  useEffect(() => {
+    mapRef.current = map;
+  }, [map, mapRef]);
+  return null;
+}
+
+export default function Authority(): JSX.Element {
   const [reports, setReports] = useState<Report[]>([]);
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [loading, setLoading] = useState(false);
