@@ -40,25 +40,42 @@ const Citizen = () => {
   };
 
   const submitReport = async () => {
-    if (!form.type) return alert("Select a hazard type.");
-    if (!form.location) return alert("Please get your location first.");
+  if (!form.type) return alert("Select a hazard type.");
+  if (!form.location) return alert("Please get your location first.");
 
-    const payload = {
-      type: form.type,
-      description: form.description,
-      latitude: form.location.lat,
-      longitude: form.location.lng,
-    };
+ const payload = {
+  type: form.type,
+  description: form.description,
+  lat: form.location.lat,
+  lng: form.location.lng,
+};
 
-    console.log("Sending report:", payload);
 
-    // TODO: connect this with your backend
-    // await fetch("/api/report", { method: "POST", body: JSON.stringify(payload) })
 
-    alert("Report submitted!");
+
+  try {
+    const response = await fetch("http://localhost:3000/api/v1/reports", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to submit report");
+    }
+
+    alert("Report submitted successfully!");
+
     setShowForm(false);
     setForm({ type: "", description: "", location: null });
-  };
+
+  } catch (err) {
+    alert("Error sending report: " + err);
+  }
+};
+
 
   return (
     <div style={{ padding: "20px" }}>
