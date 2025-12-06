@@ -4,6 +4,7 @@ import type { Map as LeafletMap, LatLng } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import safeSpaceService from "../services/safeSpaceService";
 import { socket } from "../services/socket";
 import { getReportsApi, patchReportApi, getHazardsApi, postSafePlaceApi } from "../services/api";
 import { fetchCurrentUser } from "../services/loginService";
@@ -99,6 +100,8 @@ export default function Authority(): JSX.Element {
   const [isAddingSafePlace, setIsAddingSafePlace] = useState(false);
   const [newPlaceLoc, setNewPlaceLoc] = useState<LatLng | null>(null);
   const [newPlaceName, setNewPlaceName] = useState("");
+  const [newPlaceAddress, setNewPlaceAddress] = useState("");
+  const [newPlaceCapacity, setNewPlaceCapacity] = useState("");
 
   const mapRef = useRef<LeafletMap | null>(null);
   const pendingCount = reports.filter((r) => r.status === "pending").length;
@@ -155,12 +158,25 @@ export default function Authority(): JSX.Element {
   }
 
   const handleSaveSafePlace = async () => {
-    if (!newPlaceLoc || !newPlaceName.trim()) return alert("Invalid details");
+    if (!newPlaceLoc || !newPlaceAddress.trim() || !newPlaceCapacity.trim()) {
+      return alert("Please fill all fields and select a location on the map");
+    }
     try {
-      await postSafePlaceApi({ lat: newPlaceLoc.lat, lng: newPlaceLoc.lng, name: newPlaceName });
-      alert("Saved!");
-      setIsAddingSafePlace(false); setNewPlaceLoc(null); setNewPlaceName("");
-    } catch (error) { alert("Failed save"); }
+      await safeSpaceService.createSafeSpace(
+        newPlaceAddress,
+        parseInt(newPlaceCapacity, 10),
+        newPlaceLoc.lat,
+        newPlaceLoc.lng
+      );
+      alert("Shelter added successfully!");
+      setIsAddingSafePlace(false);
+      setNewPlaceLoc(null);
+      setNewPlaceName("");
+      setNewPlaceAddress("");
+      setNewPlaceCapacity("");
+    } catch (error) { 
+      alert("Failed to add shelter"); 
+    }
   };
 
   return (
@@ -169,21 +185,69 @@ export default function Authority(): JSX.Element {
       <div style={{ width: 420, borderRight: "1px solid #eee", padding: 16, overflowY: "auto" }}>
         <h2>Authority Dashboard</h2>
 
-        <div style={{ marginBottom: 20, padding: 15, backgroundColor: isAddingSafePlace ? "#e8f5e9" : "#f8f9fa", borderRadius: 8, border: "1px solid #eee" }}>
+        {/* Add Shelter Section */}
+        <section style={{ marginBottom: 20, padding: 12, backgroundColor: "#f9f9f9", borderRadius: 8, border: "1px solid #ddd" }}>
+          <h3 style={{ marginTop: 0 }}>Add New Shelter</h3>
+          
           {!isAddingSafePlace ? (
-            <button onClick={() => setIsAddingSafePlace(true)} style={{ ...btn, width: '100%', backgroundColor: '#28a745', color: 'white' }}>+ Add New Safe Place</button>
+            <button onClick={() => setIsAddingSafePlace(true)} style={{ ...btn, width: "100%", background: "#4CAF50", color: "white", fontWeight: "bold" }}>
+              + Add Shelter
+            </button>
           ) : (
-            <div>
-              <h4>Adding Safe Place</h4>
-              <input type="text" placeholder="Name" value={newPlaceName} onChange={(e) => setNewPlaceName(e.target.value)} style={{ width: '100%', marginBottom: 10, padding: 8 }} />
-              {newPlaceLoc && <div style={{fontSize: 12, marginBottom: 10}}>Selected: {newPlaceLoc.lat.toFixed(4)}, {newPlaceLoc.lng.toFixed(4)}</div>}
-              <div style={{display: 'flex', gap: 10}}>
-                <button onClick={handleSaveSafePlace} style={{...actionBtn, backgroundColor: '#28a745', flex: 1}}>Confirm</button>
-                <button onClick={() => { setIsAddingSafePlace(false); setNewPlaceLoc(null); }} style={{...actionBtn, backgroundColor: '#6c757d', flex: 1}}>Cancel</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Address</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g., 123 Main St, City"
+                  value={newPlaceAddress}
+                  onChange={(e) => setNewPlaceAddress(e.target.value)}
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc", boxSizing: "border-box", fontSize: 14 }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Capacity</label>
+                <input 
+                  type="number" 
+                  placeholder="e.g., 100"
+                  value={newPlaceCapacity}
+                  onChange={(e) => setNewPlaceCapacity(e.target.value)}
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc", boxSizing: "border-box", fontSize: 14 }}
+                  min="1"
+                />
+              </div>
+
+              <div style={{ padding: 10, backgroundColor: "#e3f2fd", borderRadius: 4, fontSize: 13, color: "#1565c0" }}>
+                📍 Click on the map to select location
+                {newPlaceLoc && <div style={{ marginTop: 8, fontSize: 12 }}>✓ Location selected: {newPlaceLoc.lat.toFixed(4)}, {newPlaceLoc.lng.toFixed(4)}</div>}
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <button 
+                  onClick={handleSaveSafePlace} 
+                  style={{ ...btn, flex: 1, background: "#28a745", color: "white", fontWeight: "bold" }}
+                >
+                  Save Shelter
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsAddingSafePlace(false);
+                    setNewPlaceLoc(null);
+                    setNewPlaceAddress("");
+                    setNewPlaceCapacity("");
+                  }} 
+                  style={{ ...btn, flex: 1, background: "#6c757d", color: "white" }}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}
-        </div>
+        </section>
+
+        {/* Safe Places */}
+        
 
         <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8 }}>
