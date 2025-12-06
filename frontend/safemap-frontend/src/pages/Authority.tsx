@@ -37,7 +37,7 @@ export default function Authority() {
     try {
       const data = await getReportsApi();
       console.log("Loaded reports!");
-      setReports(data.data.reports || []);
+      setReports(data.data || []);
     } catch (err) {
       console.error("Failed to fetch reports:", err);
     } finally {

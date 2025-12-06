@@ -1,5 +1,12 @@
 export type LatLng = [number, number];
 
+export interface SafePlace {
+  lat: number;
+  lng: number;
+  name?: string;
+  id?: string;
+}
+
 export interface Report {
   id: string;
   type: string; // "blocked_road" | "flood" | "landslide" | ...

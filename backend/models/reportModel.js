@@ -5,7 +5,7 @@ const reportSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, 'A report must have a disaster type'],
-    enum: ['blocked_road', 'flood', 'landslide', 'earthquake', 'wildfire', 'hurricane', 'tornado', 'other'],
+    enum: ['blocked_road', 'flood', 'landslide', 'earthquake', 'wildfire', 'hurricane', 'tornado', 'fire', 'other'],
   },
   description: String,
   lat: {

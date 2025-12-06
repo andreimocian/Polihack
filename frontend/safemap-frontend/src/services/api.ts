@@ -21,3 +21,9 @@ export async function getHazardsApi() {
   if (!res.ok) return [];
   return res.json();
 }
+
+export async function getSafePlacesApi() {
+  const res = await fetch(`${API_BASE}/api/v1/safePlaces`);
+  if(!res.ok) return [];
+  return res.json();
+}

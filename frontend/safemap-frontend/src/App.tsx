@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import RedirectHandler from "./services/RedirectHandler";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import MapRoute from "./pages/MapRoute";
 
 const App = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const App = () => {
           <Route path="/authority" element={<Authority />} />
           <Route path="/map" element={<MapView />} />
           <Route path="/redirect" element={<RedirectHandler />} />
+          <Route path="/nav" element={<MapRoute />} />
         </Routes>
 
       </div>
