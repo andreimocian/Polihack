@@ -20,7 +20,7 @@ const safePlaceSchema = mongoose.Schema({
   }
 });
 
-salfePlaceSchema.plugin(findOrCreate);
+safePlaceSchema.plugin(findOrCreate);
 const SafePlace = mongoose.model('safePlace', safePlaceSchema);
 
 module.exports = SafePlace;

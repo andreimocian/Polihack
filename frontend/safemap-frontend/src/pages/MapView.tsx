@@ -38,7 +38,7 @@ export default function MapView() {
     const fetchData = async () => {
       try {
         const data = await getSafePlacesApi();
-        setSafePlaces(data || []);
+        setSafePlaces(data.data || []);
       } catch (err) {
         console.error("Failed to fetch safe places:", err);
       }

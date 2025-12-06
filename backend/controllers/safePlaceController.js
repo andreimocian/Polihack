@@ -1,4 +1,4 @@
-const SafePlace = require('../models/reportModel');
+const SafePlace = require('../models/safePlaceModel');
 const { io } = require('../server');
 
 // GET all reports
