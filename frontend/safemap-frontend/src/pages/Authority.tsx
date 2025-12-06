@@ -7,8 +7,8 @@ import "leaflet/dist/leaflet.css";
 import { socket } from "../services/socket";
 import { getReportsApi, patchReportApi, getHazardsApi, postSafePlaceApi } from "../services/api";
 import { fetchCurrentUser } from "../services/loginService";
-import type { SafePlace } from "../types"; 
- 
+
+// --- Types ---
 type ReportStatus = "pending" | "provisional_closed" | "approved" | "rejected";
 
 interface Report {
@@ -23,22 +23,61 @@ interface Report {
   severity?: number;
 }
 
-interface Hazard {
-  id: string;
-  name?: string;
-  polygonGeoJson?: any;
-  status?: "provisional" | "confirmed" | "cleared";
+interface HazardGeometry {
+  date: string;
+  type: string;
+  coordinates: [number, number]; // [Longitude, Latitude]
+  magnitudeValue?: number;
+  magnitudeUnit?: string;
 }
 
+interface Hazard {
+  id: string;
+  title: string;
+  category: string;
+  geometry: HazardGeometry[]; 
+}
 
-const newPlaceIcon = L.icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+// --- SYMBOL CONFIGURATION ---
 
+// Helper to create a "Floating Symbol" (No Pin Background)
+const createSymbol = (emoji: string) => {
+  return L.divIcon({
+    // We use a div with the emoji inside. 
+    // text-shadow adds a small white outline so it is visible on dark maps/satellite
+    html: `<div style="font-size: 30px; line-height: 30px; text-shadow: 0 0 3px #fff;">${emoji}</div>`,
+    className: 'hazard-symbol-icon', // Prevents default leaflet square background
+    iconSize: [30, 30],
+    iconAnchor: [15, 15], // Center the emoji on the coordinates
+    popupAnchor: [0, -15] // Popup appears slightly above
+  });
+};
+
+const symbols = {
+  safePlace: createSymbol("🏥"),    // Hospital/Safe Place
+  wildfire: createSymbol("🔥"),     // Fire
+  flood: createSymbol("🌊"),        // Water Wave
+  landslide: createSymbol("🪨"),    // Rock
+  severeStorm: createSymbol("🌪️"),   // Tornado/Cyclone
+  earthquake: createSymbol("📉"),    // Chart/Seismic activity
+  default: createSymbol("⚠️"),      // Generic Warning
+};
+
+const getHazardSymbol = (category?: string) => {
+  if (!category) return symbols.default;
+  
+  const cat = category.toLowerCase();
+  
+  if (cat === "wildfire") return symbols.wildfire;
+  if (cat === "flood") return symbols.flood;
+  if (cat === "landslide") return symbols.landslide;
+  if (cat === "severestorm") return symbols.severeStorm;
+  if (cat === "earthquake") return symbols.earthquake;
+  
+  return symbols.default;
+};
+
+// --- Helper Components ---
 
 function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap();
@@ -48,36 +87,30 @@ function MapSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | nul
   return null;
 }
 
-function MapClickEvents({ 
-  isActive, 
-  onLocationSelect 
-}: { 
-  isActive: boolean; 
-  onLocationSelect: (latlng: LatLng) => void 
-}) {
+function MapClickEvents({ isActive, onLocationSelect }: { isActive: boolean; onLocationSelect: (latlng: LatLng) => void }) {
   useMapEvents({
     click(e) {
-      if (isActive) {
-        onLocationSelect(e.latlng);
-      }
+      if (isActive) onLocationSelect(e.latlng);
     },
   });
   return null;
 }
 
+// --- Main Component ---
 
 export default function Authority(): JSX.Element {
   const [reports, setReports] = useState<Report[]>([]);
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [showHazards, setShowHazards] = useState(true);
 
+  // Safe Place State
   const [isAddingSafePlace, setIsAddingSafePlace] = useState(false);
   const [newPlaceLoc, setNewPlaceLoc] = useState<LatLng | null>(null);
   const [newPlaceName, setNewPlaceName] = useState("");
 
   const mapRef = useRef<LeafletMap | null>(null);
-
   const pendingCount = reports.filter((r) => r.status === "pending").length;
   const provCount = reports.filter((r) => r.status === "provisional_closed").length;
 
@@ -86,20 +119,15 @@ export default function Authority(): JSX.Element {
     try {
       const data = await getReportsApi();
       setReports(data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch reports:", err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error("Failed reports", err); } 
+    finally { setLoading(false); }
   }, []);
 
   const loadHazards = useCallback(async () => {
     try {
       const data = await getHazardsApi();
       setHazards(data || []);
-    } catch (err) {
-      console.error("Failed to fetch hazards:", err);
-    }
+    } catch (err) { console.error("Failed hazards", err); }
   }, []);
 
   useEffect(() => {
@@ -109,23 +137,14 @@ export default function Authority(): JSX.Element {
     return () => clearInterval(id);
   }, [loadReports, loadHazards]);
 
+  // Socket listeners...
   useEffect(() => {
-    fetchCurrentUser().then((user) => {
-      console.log("Current user:", user);
-    });
-  }, []);
-
-  useEffect(() => {
-    socket.on("reportCreated", (r: any) => {
-      const report = r.data || r;
-      setReports((prev) => [report, ...prev]);
-    });
+    socket.on("reportCreated", (r: any) => setReports((prev) => [r.data || r, ...prev]));
     socket.on("reportUpdated", (r: any) => {
-      const report = r.data || r;
-      setReports((prev) => prev.map((p) => (p._id === report._id ? report : p)));
+        const report = r.data || r;
+        setReports((prev) => prev.map((p) => (p._id === report._id ? report : p)));
     });
     socket.on("hazardsUpdated", () => loadHazards());
-
     return () => {
       socket.off("reportCreated");
       socket.off("reportUpdated");
@@ -133,59 +152,27 @@ export default function Authority(): JSX.Element {
     };
   }, [loadHazards]);
 
-
+  // Actions...
   async function updateReportStatus(reportId: string, status: ReportStatus) {
     try {
       const res = await patchReportApi(reportId, { status });
       const updated = res.data || res;
       setReports((prev) => prev.map((r) => (r._id === reportId ? updated : r)));
-    } catch (err) {
-      console.error("Failed to update report:", err);
-      alert("Failed to update report (see console).");
-    }
+    } catch (err) { alert("Failed update"); }
   }
 
   function focusOnReport(r: Report) {
     setSelectedReport(r);
-    const map = mapRef.current;
-    if (!map) return;
-    map.flyTo([r.lat, r.lng], 15, { duration: 0.9 });
+    mapRef.current?.flyTo([r.lat, r.lng], 15, { duration: 0.9 });
   }
 
-  // NEW: Handle Saving the Safe Place
   const handleSaveSafePlace = async () => {
-    if (!newPlaceLoc) {
-      alert("Please select a location on the map first.");
-      return;
-    }
-    if (!newPlaceName.trim()) {
-      alert("Please enter a name for this Safe Place.");
-      return;
-    }
-
+    if (!newPlaceLoc || !newPlaceName.trim()) return alert("Invalid details");
     try {
-      await postSafePlaceApi({
-        lat: newPlaceLoc.lat,
-        lng: newPlaceLoc.lng,
-        name: newPlaceName
-      });
-      
-      alert("Safe Place saved successfully!");
-      
-      // Reset state
-      setIsAddingSafePlace(false);
-      setNewPlaceLoc(null);
-      setNewPlaceName("");
-    } catch (error) {
-      console.error("Failed to save safe place", error);
-      alert("Failed to save safe place.");
-    }
-  };
-
-  const handleCancelSafePlace = () => {
-    setIsAddingSafePlace(false);
-    setNewPlaceLoc(null);
-    setNewPlaceName("");
+      await postSafePlaceApi({ lat: newPlaceLoc.lat, lng: newPlaceLoc.lng, name: newPlaceName });
+      alert("Saved!");
+      setIsAddingSafePlace(false); setNewPlaceLoc(null); setNewPlaceName("");
+    } catch (error) { alert("Failed save"); }
   };
 
   return (
@@ -194,66 +181,38 @@ export default function Authority(): JSX.Element {
       <div style={{ width: 420, borderRight: "1px solid #eee", padding: 16, overflowY: "auto" }}>
         <h2>Authority Dashboard</h2>
 
-        <div style={{ 
-          marginBottom: 20, 
-          padding: 15, 
-          backgroundColor: isAddingSafePlace ? "#e8f5e9" : "#f8f9fa", 
-          borderRadius: 8, 
-          border: isAddingSafePlace ? "1px solid #4caf50" : "1px solid #eee"
-        }}>
+        {/* Add Safe Place Widget */}
+        <div style={{ marginBottom: 20, padding: 15, backgroundColor: isAddingSafePlace ? "#e8f5e9" : "#f8f9fa", borderRadius: 8, border: "1px solid #eee" }}>
           {!isAddingSafePlace ? (
-            <button 
-              onClick={() => setIsAddingSafePlace(true)} 
-              style={{ ...btn, width: '100%', backgroundColor: '#28a745', color: 'white', border: 'none' }}
-            >
-              + Add New Safe Place
-            </button>
+            <button onClick={() => setIsAddingSafePlace(true)} style={{ ...btn, width: '100%', backgroundColor: '#28a745', color: 'white' }}>+ Add New Safe Place</button>
           ) : (
             <div>
-              <h4 style={{marginTop: 0}}>Adding Safe Place</h4>
-              <p style={{fontSize: 13, color: '#555'}}>Click on the map to set location.</p>
-              
-              <input 
-                type="text" 
-                placeholder="Safe Place Name (e.g. City Hospital)"
-                value={newPlaceName}
-                onChange={(e) => setNewPlaceName(e.target.value)}
-                style={{ width: '100%', padding: 8, marginBottom: 10, boxSizing: 'border-box' }}
-              />
-
-              {newPlaceLoc && (
-                 <div style={{fontSize: 12, marginBottom: 10}}>
-                   Selected: {newPlaceLoc.lat.toFixed(4)}, {newPlaceLoc.lng.toFixed(4)}
-                 </div>
-              )}
-
+              <h4>Adding Safe Place</h4>
+              <input type="text" placeholder="Name" value={newPlaceName} onChange={(e) => setNewPlaceName(e.target.value)} style={{ width: '100%', marginBottom: 10, padding: 8 }} />
+              {newPlaceLoc && <div style={{fontSize: 12, marginBottom: 10}}>Selected: {newPlaceLoc.lat.toFixed(4)}, {newPlaceLoc.lng.toFixed(4)}</div>}
               <div style={{display: 'flex', gap: 10}}>
-                <button onClick={handleSaveSafePlace} style={{...actionBtn, backgroundColor: '#28a745', flex: 1}}>
-                  Confirm
-                </button>
-                <button onClick={handleCancelSafePlace} style={{...actionBtn, backgroundColor: '#6c757d', flex: 1}}>
-                  Cancel
-                </button>
+                <button onClick={handleSaveSafePlace} style={{...actionBtn, backgroundColor: '#28a745', flex: 1}}>Confirm</button>
+                <button onClick={() => { setIsAddingSafePlace(false); setNewPlaceLoc(null); }} style={{...actionBtn, backgroundColor: '#6c757d', flex: 1}}>Cancel</button>
               </div>
             </div>
           )}
         </div>
 
-        <p style={{ marginTop: 4, marginBottom: 12 }}>
-          Incoming reports: <strong>{reports.length}</strong> — pending: <strong>{pendingCount}</strong>, provisional:{" "}
-          <strong>{provCount}</strong>
-        </p>
-
-        <div style={{ marginBottom: 12 }}>
-          <button onClick={loadReports} style={btn}>Refresh</button>
-          <button onClick={loadHazards} style={{ ...btn, marginLeft: 8 }}>Reload hazards</button>
+        {/* Controls */}
+        <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={loadReports} style={btn}>Refresh Reports</button>
+            <button onClick={loadHazards} style={btn}>Reload Hazards</button>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '10px', background: '#f0f0f0', borderRadius: '5px' }}>
+            <input type="checkbox" checked={showHazards} onChange={(e) => setShowHazards(e.target.checked)} style={{ marginRight: 8, transform: 'scale(1.2)' }} />
+            Show Active Hazards ({hazards.length})
+          </label>
         </div>
 
+        {/* Reports List */}
         <section>
-          <h3>Reports (newest first)</h3>
-          {loading && <div>Loading…</div>}
-          {!loading && reports.length === 0 && <div>No reports yet.</div>}
-
+          <h3>Reports</h3>
           <ul style={{ listStyle: "none", padding: 0 }}>
             {reports.map((r) => (
               <li key={r._id} style={reportItem}>
@@ -261,46 +220,16 @@ export default function Authority(): JSX.Element {
                   <div>
                     <strong>{r.type}</strong>
                     <div style={{ fontSize: 12, color: "#555" }}>{new Date(r.createdAt).toLocaleString()}</div>
-                    <div style={{ marginTop: 6 }}>{r.description}</div>
-                    <div style={{ fontSize: 12, marginTop: 6, color: "#333" }}>
-                      {r.lat.toFixed(5)}, {r.lng.toFixed(5)}
-                    </div>
+                    <div>{r.description}</div>
                   </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ marginBottom: 8 }}>
-                      <span style={statusBadge(r.status)}>{statusLabel(r.status)}</span>
-                    </div>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-
-              <button style={smallBtn} onClick={() => focusOnReport(r)}>
-                View on map
-              </button>
-
-             <select
-                style={{
-                  padding: "8px",
-                  borderRadius: 6,
-                  border: "1px solid #ccc",
-                  cursor: "pointer",
-                  background: "#fff",
-                  fontSize: 13
-                }}
-                defaultValue=""
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (!value) return;
-                  updateReportStatus(r._id, value as ReportStatus);
-                }}
-              >
-                <option value="">Select action...</option>
-                <option value="provisional_closed">Mark resolved</option>
-                <option value="approved">Confirm</option>
-                <option value="rejected">Reject</option>
-              </select>
-            </div>
-
+                  <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 5 }}>
+                     <span style={statusBadge(r.status)}>{r.status}</span>
+                     <button style={smallBtn} onClick={() => focusOnReport(r)}>View</button>
+                     <select onChange={(e) => e.target.value && updateReportStatus(r._id, e.target.value as ReportStatus)} defaultValue="" style={{padding: 4}}>
+                        <option value="">Action...</option>
+                        <option value="provisional_closed">Resolve</option>
+                        <option value="approved">Confirm</option>
+                     </select>
                   </div>
                 </div>
               </li>
@@ -311,34 +240,45 @@ export default function Authority(): JSX.Element {
 
       {/* RIGHT: MAP */}
       <div style={{ flex: 1 }}>
-        <MapContainer 
-          center={[46.77, 23.6]} 
-          zoom={10} 
-          style={{ height: "100%", width: "100%", cursor: isAddingSafePlace ? "crosshair" : "grab" }}
-        >
+        <MapContainer center={[38, -95]} zoom={4} style={{ height: "100%", width: "100%", cursor: isAddingSafePlace ? "crosshair" : "grab" }}>
           <MapSetter mapRef={mapRef} />
-          
-          <MapClickEvents 
-            isActive={isAddingSafePlace} 
-            onLocationSelect={(latlng) => setNewPlaceLoc(latlng)} 
-          />
-
+          <MapClickEvents isActive={isAddingSafePlace} onLocationSelect={(latlng) => setNewPlaceLoc(latlng)} />
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
+          {/* 1. Reports (Standard Markers) */}
           {reports.map((r) => (
             <Marker key={r._id} position={[r.lat, r.lng]}>
-              <Popup>
-                <div style={{ minWidth: 220 }}>
-                  <strong>{r.type}</strong>
-                  <div style={{ fontSize: 12 }}>{new Date(r.createdAt).toLocaleString()}</div>
-                  <div style={{ marginTop: 6 }}>{r.description}</div>
-                </div>
-              </Popup>
+              <Popup><strong>{r.type}</strong><br/>{r.description}</Popup>
             </Marker>
           ))}
 
+          {/* 2. Hazards (SYMBOLS/EMOJIS) */}
+          {showHazards && hazards.map((h) => {
+             const geo = h.geometry && h.geometry[0];
+             if (!geo || geo.type !== 'Point' || !geo.coordinates) return null;
+             const [lng, lat] = geo.coordinates;
+
+             return (
+               <Marker key={h.id} position={[lat, lng]} icon={getHazardSymbol(h.category)}>
+                 <Popup>
+                   <div style={{textAlign: 'center'}}>
+                      <div style={{fontSize: 24}}>{getHazardSymbol(h.category).options.html?.replace(/<[^>]*>?/gm, '')}</div>
+                      <strong style={{textTransform: 'capitalize'}}>{h.category}</strong>
+                      <br/>
+                      {h.title}
+                      <br/>
+                      <span style={{fontSize: 11, color: '#666'}}>
+                        {new Date(geo.date).toLocaleDateString()}
+                      </span>
+                   </div>
+                 </Popup>
+               </Marker>
+             );
+          })}
+
+          {/* 3. New Safe Place (Symbol) */}
           {isAddingSafePlace && newPlaceLoc && (
-            <Marker position={newPlaceLoc} icon={newPlaceIcon}>
+            <Marker position={newPlaceLoc} icon={symbols.safePlace}>
               <Popup>New Safe Place Location</Popup>
             </Marker>
           )}
@@ -349,58 +289,18 @@ export default function Authority(): JSX.Element {
   );
 }
 
-// --- Styles (Same as before) ---
-const reportItem: React.CSSProperties = {
-  padding: "12px",
-  marginBottom: "10px",
-  backgroundColor: "#fff",
-  borderRadius: 8,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-};
+// --- Styles ---
+// (Ensure this is in your CSS file or a style tag to remove the default Leaflet square background)
+// .hazard-symbol-icon { background: transparent; border: none; }
 
-const btn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: "1px solid #ddd",
-  background: "#fff",
-  cursor: "pointer",
-};
-
-const smallBtn: React.CSSProperties = {
-  padding: "6px 8px",
-  borderRadius: 6,
-  border: "none",
-  background: "#1e90ff",
-  color: "#fff",
-  cursor: "pointer",
-  fontSize: 12,
-};
-
-const actionBtn: React.CSSProperties = {
-  padding: "8px 10px",
-  borderRadius: 8,
-  border: "none",
-  background: "#ff9900",
-  color: "#fff",
-  cursor: "pointer",
-  fontSize: 13,
-};
-
+const reportItem: React.CSSProperties = { padding: "12px", marginBottom: "10px", backgroundColor: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" };
+const btn: React.CSSProperties = { padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: "pointer" };
+const smallBtn: React.CSSProperties = { padding: "6px 8px", borderRadius: 6, border: "none", background: "#1e90ff", color: "#fff", cursor: "pointer", fontSize: 12 };
+const actionBtn: React.CSSProperties = { padding: "8px 10px", borderRadius: 8, border: "none", background: "#ff9900", color: "#fff", cursor: "pointer", fontSize: 13 };
 const statusBadge = (status: ReportStatus): React.CSSProperties => {
-  const base: React.CSSProperties = {
-    padding: "6px 8px",
-    borderRadius: 6,
-    color: "#fff",
-    fontSize: 12,
-  };
+  const base: React.CSSProperties = { padding: "6px 8px", borderRadius: 6, color: "#fff", fontSize: 12 };
   if (status === "pending") return { ...base, backgroundColor: "#6c757d" };
   if (status === "provisional_closed") return { ...base, backgroundColor: "#f0ad4e" };
   if (status === "approved") return { ...base, backgroundColor: "#28a745" };
-  if (status === "rejected") return { ...base, backgroundColor: "#d9534f" };
   return base;
-};
-
-const statusLabel = (status: ReportStatus) => {
-  if (status === "provisional_closed") return "resolved";
-  return status;
 };

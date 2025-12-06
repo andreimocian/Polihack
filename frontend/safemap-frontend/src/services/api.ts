@@ -17,7 +17,8 @@ export async function patchReportApi(id: string, body: any) {
 }
 
 export async function getHazardsApi() {
-  const res = await fetch(`${API_BASE}/api/hazards`);
+  const res = await fetch(`${API_BASE}/api/v1/hazards/all`);
+  console.log(res);
   if (!res.ok) return [];
   return res.json();
 }

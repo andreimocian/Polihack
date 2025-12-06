@@ -2,25 +2,22 @@
 const https = require('https');
 
 // Helper function to perform the actual HTTPS request
-// This keeps our code DRY (Don't Repeat Yourself)
-const fetchFromNASA = (category) => {
+// Added 'limit' parameter with a default of 100 to prevent fetching huge historical datasets
+const fetchFromNASA = (category, limit = 100) => {
     return new Promise((resolve, reject) => {
-        const url = `https://eonet.gsfc.nasa.gov/api/v3/categories/${category}`;
+        // We append ?limit=${limit} to the URL
+        const url = `https://eonet.gsfc.nasa.gov/api/v3/categories/${category}?limit=${limit}`;
 
         https.get(url, (res) => {
             let data = '';
 
-            // A chunk of data has been received.
             res.on('data', (chunk) => {
                 data += chunk;
             });
 
-            // The whole response has been received.
             res.on('end', () => {
                 try {
                     const json = JSON.parse(data);
-                    // EONET returns an object with a 'events' array. 
-                    // We only return the events to keep the response clean.
                     resolve(json.events || []);
                 } catch (e) {
                     reject(new Error(`Failed to parse NASA data for ${category}`));
@@ -39,7 +36,7 @@ const HazardController = {
     getWildfires: async (req, res) => {
         try {
             const data = await fetchFromNASA('wildfires');
-            res.json(data);
+            res.json(data); // Returns max 100 wildfires
         } catch (error) {
             console.error('Error fetching wildfires:', error);
             res.status(500).json({ error: 'Failed to fetch wildfire data' });
@@ -87,12 +84,11 @@ const HazardController = {
     },
 
     // 2. Aggregate Function (Get All)
-    // This fetches all 5 categories at the same time (in parallel)
     getAllHazards: async (req, res) => {
         try {
             console.log("Fetching all hazards...");
             
-            // Promise.all waits for all requests to finish
+            // We fetch up to 100 of each category (Total max could be 500 items)
             const [wildfires, floods, landslides, severeStorms, earthquakes] = await Promise.all([
                 fetchFromNASA('wildfires'),
                 fetchFromNASA('floods'),
@@ -101,8 +97,7 @@ const HazardController = {
                 fetchFromNASA('earthquakes')
             ]);
 
-            // Combine them into a single list
-            // We also tag them so the frontend knows the source category
+            // Combine them into a single list and tag them
             const combinedData = [
                 ...wildfires.map(e => ({ ...e, category: 'wildfire' })),
                 ...floods.map(e => ({ ...e, category: 'flood' })),
@@ -111,7 +106,18 @@ const HazardController = {
                 ...earthquakes.map(e => ({ ...e, category: 'earthquake' }))
             ];
 
-            res.json(combinedData);
+            // 1. Sort by Date (Descending - Newest first)
+            combinedData.sort((a, b) => {
+                // EONET stores dates in geometries array. We pick the first one (start date).
+                const dateA = new Date(a.geometries && a.geometries.length ? a.geometries[0].date : 0);
+                const dateB = new Date(b.geometries && b.geometries.length ? b.geometries[0].date : 0);
+                return dateB - dateA; 
+            });
+
+            // 2. Slice to keep only the top 100 most recent across all categories
+            const recentHazards = combinedData.slice(0, 100);
+
+            res.json(recentHazards);
 
         } catch (error) {
             console.error('Error fetching all hazards:', error);
