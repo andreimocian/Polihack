@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from "react-leaflet";
 import L from "leaflet";
+import type { FeatureCollection } from "geojson";
 import type { LatLng, SafePlace } from "../types";
 import { getSafePlacesApi } from "../services/api";
 import { findClosestSafePlace } from "../utils/geoUtils";
@@ -12,7 +13,7 @@ const defaultIcon = L.icon({
   iconAnchor: [12, 41]
 });
 
-const closestIcon = L.icon({
+const selectedIcon = L.icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
   iconSize: [25, 41],
@@ -32,7 +33,9 @@ export default function MapView() {
   const [position, setPosition] = useState<LatLng | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [safePlaces, setSafePlaces] = useState<SafePlace[]>([]);
-  const [closestSafePlace, setClosestSafePlace] = useState<SafePlace | null>(null);
+  const [selectedSafePlace, setSelectedSafePlace] = useState<SafePlace | null>(null);
+
+  const [routeData, setRouteData] = useState<FeatureCollection | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,13 +89,34 @@ export default function MapView() {
         position[1], // Longitude
         safePlaces
       );
-      setClosestSafePlace(closest);
+      setSelectedSafePlace(closest);
       
       if(closest) {
-          console.log("Closest place found:", closest);
+          fetchRouteToSafePlace(position, closest);
       }
     }
   }, [position, safePlaces]);
+
+  const fetchRouteToSafePlace = async (userPos: LatLng, destination: SafePlace) => {
+    try {
+      // OSRM requires Longitude,Latitude (Leaflet gives Latitude,Longitude)
+      // userPos is [lat, lon]
+      const startParam = `${userPos[1]},${userPos[0]}`; 
+      const endParam = `${destination.lng},${destination.lat}`;
+
+      // Call the Node.js Controller we built earlier
+      const url = `http://localhost:3000/api/v1/nav?start=${startParam}&end=${endParam}`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.features) {
+        setRouteData(data);
+      }
+    } catch (err) {
+      console.error("Failed to calculate route:", err);
+    }
+  };
 
   if (error) return <div style={{ padding: 20 }}>Geolocation error: {error}</div>;
   if (!position) return <div style={{ padding: 20 }}>Locating you…</div>;
@@ -113,23 +137,31 @@ export default function MapView() {
       {/* Render All Safe Places */}
       {safePlaces.map((place, index) => {
         // Check if this specific place is the closest one
-        const isClosest = closestSafePlace && 
-                          closestSafePlace.lat === place.lat && 
-                          closestSafePlace.lng === place.lng;
+        const isSelected = selectedSafePlace && 
+                          selectedSafePlace.lat === place.lat && 
+                          selectedSafePlace.lng === place.lng;
 
         return (
             <Marker 
                 key={index} 
                 position={[place.lat, place.lng]}
-                icon={isClosest ? closestIcon : defaultIcon} // Highlight closest
+                icon={isSelected ? selectedIcon : defaultIcon} // Highlight selected
             >
                 <Popup>
                     <strong>{place.name || "Safe Place"}</strong> <br />
-                    {isClosest ? " (Closest to you!)" : ""}
+                    {isSelected ? " (Closest to you!)" : ""}
                 </Popup>
             </Marker>
         );
       })}
+
+      {routeData && (
+        <GeoJSON 
+            key={JSON.stringify(routeData)} // Forces update when route changes
+            data={routeData} 
+            style={{ color: 'blue', weight: 4, opacity: 0.6 }} 
+        />
+      )}
     </MapContainer>
   );
 }
