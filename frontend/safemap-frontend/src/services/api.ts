@@ -23,7 +23,14 @@ export async function getHazardsApi() {
 }
 
 export async function getSafePlacesApi() {
-  const res = await fetch(`${API_BASE}/api/v1/safe-places`);
+  const res = await fetch(`${API_BASE}/api/v1/safe-places`, {
+    method: "GET",
+    credentials: 'include',
+  });
+  console.log("daaaaaaa");
+  console.log(res);
+  
+
   if(!res.ok) return [];
   return res.json();
 }
