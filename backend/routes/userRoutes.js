@@ -11,7 +11,7 @@ router.get('/auth/google',
 
 router.get('/auth/google/callback',
     passport.authenticate('google', {
-        successRedirect: `${process.env.FRONTEND_URL}/redirect`,
+        successRedirect: `${process.env.FRONTEND_URL}/home`,
         failureRedirect: `${process.env.FRONTEND_URL}/login`
     })
 );
@@ -21,8 +21,14 @@ router.get('/auth/failure', (req, res) => {
 })
 
 router.get('/me', authController.protect, (req, res) => {
-    console.log(req.user);
-    res.send('Hello!');
+    if (req.isAuthenticated()) {
+        const id = req.user._id;
+        const role = req.user.role;
+        const name = req.user.name;
+        res.status(200).json({ id: id, role: role, name: name });
+    } else {
+        res.status(401).send('Not authenticated');
+    }
 })
 
 router.get('/logout', (req, res, next) => {
@@ -32,7 +38,5 @@ router.get('/logout', (req, res, next) => {
         res.redirect(`${process.env.FRONTEND_URL}/login`);
     });
 });
-
-
 
 module.exports = router;
