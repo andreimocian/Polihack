@@ -132,7 +132,11 @@ export default function MapView() {
               <strong>{place.name || "Safe Place"}</strong>
               <br />
               {isSelected ? " (Closest to you!)" : ""}
-              <br /><br />
+              <br />
+              {place.address && <><strong>Address:</strong> {place.address}<br /></>}
+              {place.capacity && <><strong>Capacity:</strong> {place.capacity} people<br /></>}
+              {place.contact && <><strong>Contact:</strong> {place.contact}<br /></>}
+              <br />
 
               <button
                 style={{

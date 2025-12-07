@@ -10,6 +10,7 @@ import {
   Alert
 } from "@mui/material";
 
+import safeSpaceService from "../services/safeSpaceService";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -24,6 +25,7 @@ interface ShelterData {
   address: string;
   capacity: number | "";
   location: { lat: number; lng: number } | null;
+  contact?: string;
 }
 
 export default function AddShelterPanel() {
@@ -31,6 +33,7 @@ export default function AddShelterPanel() {
     address: "",
     capacity: "",
     location: null,
+    contact: "",
   });
 
   const getLocation = () => {
@@ -63,6 +66,30 @@ export default function AddShelterPanel() {
     newShelter.capacity &&
     newShelter.location !== null;
 
+  const handleSaveShelter = async () => {
+    if (!isFormValid) return;
+    
+    try {
+      await safeSpaceService.createSafeSpace(
+        newShelter.address,
+        newShelter.capacity as number,
+        newShelter.location!.lat,
+        newShelter.location!.lng,
+        newShelter.contact
+      );
+      alert("Shelter saved successfully!");
+      setNewShelter({
+        address: "",
+        capacity: "",
+        location: null,
+        contact: "",
+      });
+    } catch (error) {
+      alert("Failed to save shelter");
+      console.error(error);
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 3, px: 2 }}>
       <Card sx={{ borderRadius: 4, p: 2, boxShadow: 4 }}>
@@ -92,6 +119,17 @@ export default function AddShelterPanel() {
             onChange={(e) =>
               setNewShelter({ ...newShelter, capacity: Number(e.target.value) })
             }
+          />
+
+          <TextField
+            label="Contact Information (optional)"
+            variant="outlined"
+            fullWidth
+            value={newShelter.contact}
+            onChange={(e) =>
+              setNewShelter({ ...newShelter, contact: e.target.value })
+            }
+            placeholder="e.g., +40 123 456 7890"
           />
 
           <Button
@@ -149,6 +187,7 @@ export default function AddShelterPanel() {
             color="success"
             fullWidth
             disabled={!isFormValid}
+            onClick={handleSaveShelter}
           >
             Save Shelter
           </Button>

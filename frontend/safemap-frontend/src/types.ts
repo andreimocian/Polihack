@@ -5,6 +5,9 @@ export interface SafePlace {
   lng: number;
   name?: string;
   id?: string;
+  address?: string;
+  capacity?: number;
+  contact?: string;
 }
 
 export interface Report {

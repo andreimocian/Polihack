@@ -15,7 +15,10 @@ const safePlaceSchema = mongoose.Schema({
   },
   address: {
     type: String
-  }
+  },
+  contact: {
+    type: String
+  },
 });
 
 safePlaceSchema.plugin(findOrCreate);

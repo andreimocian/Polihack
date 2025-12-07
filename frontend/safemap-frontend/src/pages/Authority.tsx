@@ -102,6 +102,7 @@ export default function Authority(): JSX.Element {
   const [newPlaceName, setNewPlaceName] = useState("");
   const [newPlaceAddress, setNewPlaceAddress] = useState("");
   const [newPlaceCapacity, setNewPlaceCapacity] = useState("");
+  const [newPlaceContact, setNewPlaceContact] = useState("");
 
   const mapRef = useRef<LeafletMap | null>(null);
   const pendingCount = reports.filter((r) => r.status === "pending").length;
@@ -166,7 +167,8 @@ export default function Authority(): JSX.Element {
         newPlaceAddress,
         parseInt(newPlaceCapacity, 10),
         newPlaceLoc.lat,
-        newPlaceLoc.lng
+        newPlaceLoc.lng,
+        newPlaceContact.trim()
       );
       alert("Shelter added successfully!");
       setIsAddingSafePlace(false);
@@ -217,6 +219,17 @@ export default function Authority(): JSX.Element {
                   min="1"
                 />
               </div>
+              
+              <div>
+                <label style={{ display: "block", marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Contact Information</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g., +40 123 456 7890"
+                  value={newPlaceContact}
+                  onChange={(e) => setNewPlaceContact(e.target.value)}
+                  style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc", boxSizing: "border-box", fontSize: 14 }}
+                />
+              </div>
 
               <div style={{ padding: 10, backgroundColor: "#e3f2fd", borderRadius: 4, fontSize: 13, color: "#1565c0" }}>
                 📍 Click on the map to select location
@@ -236,6 +249,7 @@ export default function Authority(): JSX.Element {
                     setNewPlaceLoc(null);
                     setNewPlaceAddress("");
                     setNewPlaceCapacity("");
+                    setNewPlaceContact("");
                   }} 
                   style={{ ...btn, flex: 1, background: "#6c757d", color: "white" }}
                 >
