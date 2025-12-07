@@ -117,6 +117,32 @@ const HazardController = {
             // 2. Slice to keep only the top 100 most recent across all categories
             const recentHazards = combinedData.slice(0, 100);
 
+            recentHazards.push({
+                id: "AXI4_1589",
+                title: "Mancarea fire de la Big Belly",
+                description: "Top",
+                link: "https://www.bigbelly-cluj.ro/",
+                categories: [{
+                    id: "wildfires",
+                    title: "Wildfires"
+                }],
+                sources: [{
+                    id: "AXI4",
+                    url: "https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/vivado.html"
+                }],
+                geometry: [{
+                    magnitudeValue: 800,
+                    magnitudeUnit: "hectare",
+                    date: "2025-12-04T07:30:00Z",
+                    type: "Point",
+                    coordinates: [
+                        23.610020371912167,
+                        46.7840103657538,
+                    ]
+                }],
+                category: "wildfire"
+            });
+
             res.json(recentHazards);
 
         } catch (error) {
