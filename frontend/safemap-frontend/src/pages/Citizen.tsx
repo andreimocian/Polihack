@@ -85,15 +85,9 @@ const Citizen = () => {
           style={bigButton}
           onClick={() => navigate("/map")}
         >
-          🧭 Evacuate Safely
+          🧭 Shelter Map
         </button>
 
-        <button
-          style={bigButton}
-          onClick={() => navigate("/map")}
-        >
-          📍 View Live Map
-        </button>
       </div>
 
       {showForm && (

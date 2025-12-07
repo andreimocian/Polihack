@@ -35,6 +35,7 @@ const NavButton = (props: any) => (
 const Navbar = () => {
   const user = useCurrentUser();
   const role = user?.role;
+  const isLoggedIn = !!user;
 
   return (
     <Box
@@ -56,38 +57,48 @@ const Navbar = () => {
       <Typography
         variant="h6"
         component={Link}
-        to="/home"
+        to={isLoggedIn ? "/home" : "/citizen"}
         sx={{ fontWeight: 600, mr: 2, color: 'inherit', textDecoration: 'none' }}
       >
         SafeMap
       </Typography>
 
-      <NavButton to="/home">Home</NavButton>
-
-      {/* autoritate */}
-      {role === "autoritate" && <NavButton to="/authority">Authority Panel</NavButton>}
-
-      {/* voluntar */}
-      {role === "voluntar" && (
+      {!isLoggedIn ? (
         <>
-          <NavButton to="/map">Map</NavButton>
-          <NavButton to="/add-shelter">Add Shelter</NavButton>
+          <NavButton to="/citizen">Citizen Panel</NavButton>
+        </>
+      ) : (
+        <>
+          <NavButton to="/home">Home</NavButton>
+
+          {/* autoritate */}
+          {role === "autoritate" && <NavButton to="/authority">Authority Panel</NavButton>}
+
+          {/* voluntar */}
+          {role === "voluntar" && (
+            <>
+              <NavButton to="/map">Map</NavButton>
+              <NavButton to="/add-shelter">Add Shelter</NavButton>
+            </>
+          )}
+
+          {role !== "voluntar" && role !== "autoritate" && <NavButton to="/citizen">Crisis panel</NavButton>}
         </>
       )}
 
-      {role !== "voluntar" && role !== "autoritate" && <NavButton to="/citizen">Crisis panel</NavButton>}
-
       {/* logout aligned right */}
-      <Box sx={{ ml: "auto" }}>
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={logout}
-          sx={{ textTransform: "none" }}
-        >
-          Logout
-        </Button>
-      </Box>
+      {isLoggedIn && (
+        <Box sx={{ ml: "auto" }}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={logout}
+            sx={{ textTransform: "none" }}
+          >
+            Logout
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
