@@ -1,5 +1,5 @@
 const Report = require('../models/reportModel');
-const { io } = require('../server');
+// const { io } = require('../server');
 
 // GET all reports
 exports.getAllReports = async (req, res) => {

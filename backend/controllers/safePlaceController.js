@@ -1,5 +1,5 @@
 const SafePlace = require('../models/safePlaceModel');
-const { io } = require('../server');
+// const { io } = require('../server');
 
 // GET all reports
 exports.getAllSafePlaces = async (req, res) => {
