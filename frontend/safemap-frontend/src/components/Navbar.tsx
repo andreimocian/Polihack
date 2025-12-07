@@ -75,6 +75,8 @@ const Navbar = () => {
         </>
       )}
 
+      {role !== "voluntar" && role !== "autoritate" && <NavButton to="/citizen">Crisis panel</NavButton>}
+
       {/* logout aligned right */}
       <Box sx={{ ml: "auto" }}>
         <Button
