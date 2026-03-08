@@ -87,7 +87,7 @@ Create a .env in /backend:
 PORT=3000
 OSRM_URL=http://router.project-osrm.org/
 
-🚀 Running SafeLink
+🚀 Running SafeMap
 Open two terminals:
 Frontend
 npm run dev
