@@ -3,7 +3,7 @@
 🛰️ SafeMap — Emergency Coordination & Safe Routing Platform
 SafeMap is a web platform designed to improve emergency response by connecting citizens, municipalities, volunteers, and ISU (emergency authorities) through real‑time hazard reporting, shelter information, and safe‑route navigation.
 
-Built during the Polihack Hackathon 2025.
+Built during the Polihack Hackathon 2025 , where it ranked 5th in the Web category 
 
 🚨 Key-Features
 For Citizens
@@ -67,7 +67,7 @@ Browser geolocation API
 
 📦 Installation
 1. Clone repo
-git clone https://github.com/yourusername/Polihack.git
+git clone https://github.com/andreimocian/Polihack.git
 cd Polihack
 
 2. Install frontend
