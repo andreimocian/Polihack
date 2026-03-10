@@ -1,6 +1,6 @@
 ![SafeMap](image/Icon.jpeg)
 
-🛰️ SafeMap — Emergency Coordination & Safe Routing Platform
+🛰️ SafeMap - Emergency Coordination & Safe Routing Platform
 SafeMap is a web platform designed to improve emergency response by connecting citizens, municipalities, volunteers, and ISU (emergency authorities) through real‑time hazard reporting, shelter information, and safe‑route navigation.
 
 Built during the Polihack Hackathon 2025 , where it ranked 5th in the Web category 
@@ -120,13 +120,13 @@ Scale across Romania
 Long‑term: national ISU adoption
 
 🤝 Team
-Emma‑Daria Ghiță — Research & Pitch
+Emma‑Daria Ghiță - Research & Pitch
 
-Maria Moruțan — Frontend & Design
+Maria Moruțan - Frontend & Design
 
-Mocian Andrei — Backend
+Mocian Andrei - Backend
 
-David Rafael Rotar — Integration & Mapping
+David Rafael Rotar - Integration & Mapping
 
 📄 License
 Free to use, modify and build upon.
